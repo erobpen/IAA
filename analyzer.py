@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import io
 
 def analyze_strategy():
     print("Downloading data...")
@@ -55,9 +56,11 @@ def analyze_strategy():
     plt.legend()
     plt.grid(True, which="both", ls="-", alpha=0.2)
     
-    output_path = 'strategy_comparison.png'
-    plt.savefig(output_path)
-    print(f"Analysis complete. Plot saved to {output_path}")
+    output = io.BytesIO()
+    plt.savefig(output, format='png')
+    output.seek(0)
+    print("Analysis complete. Returning image buffer.")
+    return output
 
 if __name__ == "__main__":
     analyze_strategy()
