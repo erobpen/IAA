@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantitative Finance App</title>
+    <!-- Google Fonts for Premium Look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color Palette - Premium Dark Theme */
+            --bg-color: #0f172a;       /* Slate 900 */
+            --card-bg: #1e293b;        /* Slate 800 */
+            --text-primary: #f8fafc;   /* Slate 50 */
+            --text-secondary: #94a3b8; /* Slate 400 */
+            --accent-color: #3b82f6;   /* Blue 500 */
+            --accent-hover: #2563eb;   /* Blue 600 */
+            --border-color: #334155;   /* Slate 700 */
+            --success-color: #10b981;  /* Emerald 500 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Level 1 Tabs (Main Navigation) --- */
+        .tabs-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: color 0.3s, border-bottom 0.3s;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -11px; /* Aligns with border-bottom of .tabs-nav */
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-color);
+        }
+
+        /* --- Content Sections --- */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* --- Level 2 Tabs (Sub Navigation) --- */
+        .sub-tabs-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sub-tab-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-tab-btn:hover {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .sub-tab-btn.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .sub-tab-content {
+            display: none;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
+
+        /* --- Components --- */
+        .chart-container {
+            width: 100%;
+            text-align: center;
+        }
+
+        img.main-plot {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            /* Invert colors slightly for dark mode checking or just leave as is if plot style supports valid colors */
+        }
+
+        .placeholder-text {
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 40px;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Investing App</h1>
+    </header>
+
+    <!-- LEVEL 1 TABS -->
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab(event, 'leverage-tab')">Leverage</button>
+        <!-- Placeholder for future tabs -->
+    </div>
+
+    <!-- LEVERAGE TAB CONTENT (Main Section) -->
+    <div id="leverage-tab" class="tab-content active">
+        
+        <!-- LEVEL 2 TABS (Sub Tabs) -->
+        <div class="sub-tabs-nav">
+            <button class="sub-tab-btn active" onclick="openSubTab(event, 'graph-view')">Graph</button>
+            <button class="sub-tab-btn" onclick="openSubTab(event, 'data-view')">Data</button>
+        </div>
+
+        <!-- GRAPH VIEW -->
+        <div id="graph-view" class="sub-tab-content active">
+            <div class="chart-container">
+                <img src="data:image/png;base64,{{ plot_url }}" alt="Strategy Comparison" class="main-plot">
+            </div>
+        </div>
+
+        <!-- DATA VIEW -->
+        <div id="data-view" class="sub-tab-content">
+            <div class="placeholder-text">
+                Table data pending...
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Simple Vanilla JS to handle tab switching
+    
+    // Level 1 Tab Switching
+    function openTab(evt, tabName) {
+        // Hide all tab-content
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+
+        // Deactivate all tab-btn
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+
+        // Show the current tab, and add an "active" class to the button that opened the tab
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Level 2 Sub-Tab Switching
+    function openSubTab(evt, subTabName) {
+        // Look within the active main tab (or globally since IDs are unique)
+        // Hide all sub-tab-content
+        var i, subtabcontent, subtablinks;
+        subtabcontent = document.getElementsByClassName("sub-tab-content");
+        for (i = 0; i < subtabcontent.length; i++) {
+            subtabcontent[i].classList.remove("active");
+        }
+
+        // Deactivate all sub-tab-btn
+        subtablinks = document.getElementsByClassName("sub-tab-btn");
+        for (i = 0; i < subtablinks.length; i++) {
+            subtablinks[i].classList.remove("active");
+        }
+
+        // Show the current sub-tab
+        document.getElementById(subTabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+</script>
+
+</body>
+</html>
