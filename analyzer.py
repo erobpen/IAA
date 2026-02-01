@@ -79,27 +79,27 @@ def analyze_strategy():
         # Basic Buy & Hold Strategy (1x)
         data['Strategy_1x'] = data['Log_Returns'].cumsum()
         
-        # "Leverage for the Long Run" Logic
-        # We assume risk-free rate is 0 for simplicity in this cash position
-        # 2x Strategy: 2x leverage when Risk-On, 0x (Cash) when Risk-Off
-        data['Strategy_2x_Returns'] = np.where(data['Regime'] == 1, 2 * data['Log_Returns'], 0)
-        data['Strategy_2x'] = data['Strategy_2x_Returns'].cumsum()
+        # 3x Buy & Hold Strategy (New)
+        # Pure leverage, always invested
+        data['Strategy_3x_BH_Returns'] = 3 * data['Log_Returns']
+        data['Strategy_3x_BH'] = data['Strategy_3x_BH_Returns'].cumsum()
         
-        # 3x Strategy: 3x leverage when Risk-On, 0x (Cash) when Risk-Off
+        # 3x Strategy (MA Filter)
+        # 3x leverage when Risk-On, 0x (Cash) when Risk-Off
         data['Strategy_3x_Returns'] = np.where(data['Regime'] == 1, 3 * data['Log_Returns'], 0)
         data['Strategy_3x'] = data['Strategy_3x_Returns'].cumsum()
         
         # Convert back to simple returns for plotting cumulative growth (exp)
         initial_capital = 10000
         data['Buy_Hold_Growth'] = initial_capital * np.exp(data['Strategy_1x'])
-        data['Lev_2x_Growth'] = initial_capital * np.exp(data['Strategy_2x'])
+        data['Lev_3x_BH_Growth'] = initial_capital * np.exp(data['Strategy_3x_BH'])
         data['Lev_3x_Growth'] = initial_capital * np.exp(data['Strategy_3x'])
         
         print("Plotting results...")
         plt.figure(figsize=(12, 6))
         plt.plot(data.index, data['Buy_Hold_Growth'], label='Buy & Hold (1x)', linewidth=1)
-        plt.plot(data.index, data['Lev_2x_Growth'], label='Strategy 2x', linewidth=1)
-        plt.plot(data.index, data['Lev_3x_Growth'], label='Strategy 3x', linewidth=1)
+        plt.plot(data.index, data['Lev_3x_BH_Growth'], label='3x Buy & Hold', linewidth=1, color='orange')
+        plt.plot(data.index, data['Lev_3x_Growth'], label='3x Strategy (MA)', linewidth=1, color='purple')
         
         plt.yscale('log')
         plt.title('Leverage for the Long Run: Portfolio Value ($10k Initial)')
@@ -115,7 +115,7 @@ def analyze_strategy():
         plt.close() # Close plot to free memory
         
         # Prepare Data for Table (Monthly Resample)
-        # Resample to End of Month ('M') and take the last value
+        # Resample to End of Month ('ME') and take the last value
         monthly_data = data.resample('ME').last()
         
         # Reset index to make Date a column
@@ -126,13 +126,10 @@ def analyze_strategy():
         for _, row in monthly_data.iterrows():
             table_data.append({
                 'date': row['Date'].strftime('%Y-%m-%d'),
-                'sp500': f"{row['Close']:,.2f}",
-                'strategy_2x': f"{row['Buy_Hold_Growth']:,.2f}", # Actually using 1x growth column for reference or 2x? 
-                # Wait, user asked for "Date/ S&P value/ 2x / 3x".
                 # S&P Value usually implies the index price, but for comparison often we show the growth of $1.
                 # Let's show: Date, Close (Index Value), 2x Growth ($), 3x Growth ($)
                 'sp500_val': f"{row['Buy_Hold_Growth']:,.2f}",
-                'strategy_2x_val': f"{row['Lev_2x_Growth']:,.2f}",
+                'strategy_3x_bh_val': f"{row['Lev_3x_BH_Growth']:,.2f}",
                 'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}"
             })
             
