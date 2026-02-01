@@ -5,7 +5,7 @@ from analyzer import analyze_strategy
 app = Flask(__name__)
 
 @app.route('/')
-def hello_world():
+def dashboard():
     img = analyze_strategy()
     plot_url = base64.b64encode(img.getvalue()).decode()
     return render_template_string('''
