@@ -131,7 +131,7 @@ def analyze_strategy():
                 # Wait, user asked for "Date/ S&P value/ 2x / 3x".
                 # S&P Value usually implies the index price, but for comparison often we show the growth of $1.
                 # Let's show: Date, Close (Index Value), 2x Growth ($), 3x Growth ($)
-                'sp500_val': f"{row['Close']:,.2f}",
+                'sp500_val': f"{row['Buy_Hold_Growth']:,.2f}",
                 'strategy_2x_val': f"{row['Lev_2x_Growth']:,.2f}",
                 'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}"
             })
