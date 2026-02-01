@@ -7,30 +7,64 @@ import matplotlib.pyplot as plt
 import os
 import io
 import traceback
+from datetime import timedelta
+import database
 
 def analyze_strategy():
     try:
-        print("Downloading data...")
-        # Download S&P 500 data
+        print("Initializing database...")
+        database.init_db()
+        
         ticker = "^GSPC"
-        start_date = "1928-01-01"
+        
+        # 1. Check what we have in DB
+        last_date = database.get_latest_date(ticker)
+        
+        today = pd.Timestamp.today().date()
+        
+        # 2. Determine download range
+        if last_date:
+            print(f"Found data up to {last_date}. Checking for new data...")
+            start_date = (last_date + timedelta(days=1)).strftime('%Y-%m-%d')
+        else:
+            print("No data in DB. Downloading full history...")
+            start_date = "1928-01-01"
+            
         end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
         
-        data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+        # 3. Download only if start_date < today
+        # Convert start_date string back to date object for comparison
+        start_date_obj = pd.to_datetime(start_date).date()
+        
+        if start_date_obj <= today:
+            print(f"Downloading from {start_date} to {end_date}...")
+            new_data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+            
+            if not new_data.empty:
+                # Handle MultiIndex if present (yfinance quirk)
+                if isinstance(new_data.columns, pd.MultiIndex):
+                    # Try to handle the structure flexibly
+                    try:
+                        # If ticker is in level 1
+                        if ticker in new_data.columns.levels[1]:
+                             new_data = new_data.xs(ticker, level=1, axis=1)
+                    except:
+                        # If structure is different, just flatten level 0
+                         new_data.columns = new_data.columns.get_level_values(0)
+
+                print(f"Downloaded {len(new_data)} new rows.")
+                database.save_stock_data(new_data, ticker)
+            else:
+                print("No new data found from Yahoo.")
+        
+        # 4. Load ALL data from DB for analysis
+        print("Loading full history from database...")
+        data = database.get_all_stock_data(ticker)
         
         if data.empty:
-            raise Exception("No data downloaded!")
-            
-        print(f"Data columns: {data.columns}")
-        print(f"Data head: {data.head()}")
-        
-        # Determine Regime: 1 if Close > SMA_200 (Risk-On), else 0 (Risk-Off)
-        # Handling potential MultiIndex in yfinance (Common issue)
-        if isinstance(data.columns, pd.MultiIndex):
-             data = data.xs(ticker, level=1, axis=1) if ticker in data.columns.levels[1] else data
-             # Fallback if xs fails or structure is different, try to just squash if 1 ticker
-             if isinstance(data.columns, pd.MultiIndex):
-                 data.columns = data.columns.get_level_values(0)
+             raise Exception("No data available in database and download failed!")
+             
+        print(f"Total data rows: {len(data)}")
 
         # Calculate 200-day Simple Moving Average
         data['SMA_200'] = data['Close'].rolling(window=200).mean()

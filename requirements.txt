@@ -4,3 +4,5 @@ yfinance
 pandas_datareader
 matplotlib
 numpy
+SQLAlchemy
+psycopg2-binary
