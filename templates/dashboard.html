@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +12,22 @@
     <style>
         :root {
             /* Color Palette - Premium Dark Theme */
-            --bg-color: #0f172a;       /* Slate 900 */
-            --card-bg: #1e293b;        /* Slate 800 */
-            --text-primary: #f8fafc;   /* Slate 50 */
-            --text-secondary: #94a3b8; /* Slate 400 */
-            --accent-color: #3b82f6;   /* Blue 500 */
-            --accent-hover: #2563eb;   /* Blue 600 */
-            --border-color: #334155;   /* Slate 700 */
-            --success-color: #10b981;  /* Emerald 500 */
+            --bg-color: #0f172a;
+            /* Slate 900 */
+            --card-bg: #1e293b;
+            /* Slate 800 */
+            --text-primary: #f8fafc;
+            /* Slate 50 */
+            --text-secondary: #94a3b8;
+            /* Slate 400 */
+            --accent-color: #3b82f6;
+            /* Blue 500 */
+            --accent-hover: #2563eb;
+            /* Blue 600 */
+            --border-color: #334155;
+            /* Slate 700 */
+            --success-color: #10b981;
+            /* Emerald 500 */
         }
 
         * {
@@ -87,7 +96,8 @@
         .tab-btn.active::after {
             content: '';
             position: absolute;
-            bottom: -11px; /* Aligns with border-bottom of .tabs-nav */
+            bottom: -11px;
+            /* Aligns with border-bottom of .tabs-nav */
             left: 0;
             width: 100%;
             height: 2px;
@@ -167,97 +177,136 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
 
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <header>
-        <h1>Investing App</h1>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Investing App</h1>
+        </header>
 
-    <!-- LEVEL 1 TABS -->
-    <div class="tabs-nav">
-        <button class="tab-btn active" onclick="openTab(event, 'leverage-tab')">Leverage</button>
-        <!-- Placeholder for future tabs -->
+        <!-- LEVEL 1 TABS -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="openTab(event, 'leverage-tab')">Leverage</button>
+            <!-- Placeholder for future tabs -->
+        </div>
+
+        <!-- LEVERAGE TAB CONTENT (Main Section) -->
+        <div id="leverage-tab" class="tab-content active">
+
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    <img src="data:image/png;base64,{{ plot_url }}" alt="Strategy Comparison" class="main-plot">
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    S&P 500 ($)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    2x Strategy ($10k)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x Strategy ($10k)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table_data %}
+                            <tr
+                                style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                                <td style="padding: 10px;">{{ row.date }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.sp500_val }}</td>
+                                <td style="padding: 10px; text-align: right; color: #60a5fa;">{{ row.strategy_2x_val }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; color: #c084fc;">{{ row.strategy_3x_val }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
-    <!-- LEVERAGE TAB CONTENT (Main Section) -->
-    <div id="leverage-tab" class="tab-content active">
-        
-        <!-- LEVEL 2 TABS (Sub Tabs) -->
-        <div class="sub-tabs-nav">
-            <button class="sub-tab-btn active" onclick="openSubTab(event, 'graph-view')">Graph</button>
-            <button class="sub-tab-btn" onclick="openSubTab(event, 'data-view')">Data</button>
-        </div>
+    <script>
+        // Simple Vanilla JS to handle tab switching
 
-        <!-- GRAPH VIEW -->
-        <div id="graph-view" class="sub-tab-content active">
-            <div class="chart-container">
-                <img src="data:image/png;base64,{{ plot_url }}" alt="Strategy Comparison" class="main-plot">
-            </div>
-        </div>
+        // Level 1 Tab Switching
+        function openTab(evt, tabName) {
+            // Hide all tab-content
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
 
-        <!-- DATA VIEW -->
-        <div id="data-view" class="sub-tab-content">
-            <div class="placeholder-text">
-                Table data pending...
-            </div>
-        </div>
+            // Deactivate all tab-btn
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
 
-    </div>
-
-</div>
-
-<script>
-    // Simple Vanilla JS to handle tab switching
-    
-    // Level 1 Tab Switching
-    function openTab(evt, tabName) {
-        // Hide all tab-content
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].classList.remove("active");
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
         }
 
-        // Deactivate all tab-btn
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active");
+        // Level 2 Sub-Tab Switching
+        function openSubTab(evt, subTabName) {
+            // Look within the active main tab (or globally since IDs are unique)
+            // Hide all sub-tab-content
+            var i, subtabcontent, subtablinks;
+            subtabcontent = document.getElementsByClassName("sub-tab-content");
+            for (i = 0; i < subtabcontent.length; i++) {
+                subtabcontent[i].classList.remove("active");
+            }
+
+            // Deactivate all sub-tab-btn
+            subtablinks = document.getElementsByClassName("sub-tab-btn");
+            for (i = 0; i < subtablinks.length; i++) {
+                subtablinks[i].classList.remove("active");
+            }
+
+            // Show the current sub-tab
+            document.getElementById(subTabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
         }
 
-        // Show the current tab, and add an "active" class to the button that opened the tab
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-    }
-
-    // Level 2 Sub-Tab Switching
-    function openSubTab(evt, subTabName) {
-        // Look within the active main tab (or globally since IDs are unique)
-        // Hide all sub-tab-content
-        var i, subtabcontent, subtablinks;
-        subtabcontent = document.getElementsByClassName("sub-tab-content");
-        for (i = 0; i < subtabcontent.length; i++) {
-            subtabcontent[i].classList.remove("active");
-        }
-
-        // Deactivate all sub-tab-btn
-        subtablinks = document.getElementsByClassName("sub-tab-btn");
-        for (i = 0; i < subtablinks.length; i++) {
-            subtablinks[i].classList.remove("active");
-        }
-
-        // Show the current sub-tab
-        document.getElementById(subTabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-    }
-
-</script>
+    </script>
 
 </body>
+
 </html>

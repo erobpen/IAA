@@ -90,9 +90,10 @@ def analyze_strategy():
         data['Strategy_3x'] = data['Strategy_3x_Returns'].cumsum()
         
         # Convert back to simple returns for plotting cumulative growth (exp)
-        data['Buy_Hold_Growth'] = np.exp(data['Strategy_1x'])
-        data['Lev_2x_Growth'] = np.exp(data['Strategy_2x'])
-        data['Lev_3x_Growth'] = np.exp(data['Strategy_3x'])
+        initial_capital = 10000
+        data['Buy_Hold_Growth'] = initial_capital * np.exp(data['Strategy_1x'])
+        data['Lev_2x_Growth'] = initial_capital * np.exp(data['Strategy_2x'])
+        data['Lev_3x_Growth'] = initial_capital * np.exp(data['Strategy_3x'])
         
         print("Plotting results...")
         plt.figure(figsize=(12, 6))
@@ -101,9 +102,9 @@ def analyze_strategy():
         plt.plot(data.index, data['Lev_3x_Growth'], label='Strategy 3x', linewidth=1)
         
         plt.yscale('log')
-        plt.title('Leverage for the Long Run: Cumulative Returns (Log Scale)')
+        plt.title('Leverage for the Long Run: Portfolio Value ($10k Initial)')
         plt.xlabel('Date')
-        plt.ylabel('Cumulative Return ($1 Invested)')
+        plt.ylabel('Portfolio Value ($)')
         plt.legend()
         plt.grid(True, which="both", ls="-", alpha=0.2)
         
@@ -112,7 +113,33 @@ def analyze_strategy():
         output.seek(0)
         print("Analysis complete. Returning image buffer.")
         plt.close() # Close plot to free memory
-        return output
+        
+        # Prepare Data for Table (Monthly Resample)
+        # Resample to End of Month ('M') and take the last value
+        monthly_data = data.resample('ME').last()
+        
+        # Reset index to make Date a column
+        monthly_data = monthly_data.reset_index()
+        
+        # Format for JSON/Template
+        table_data = []
+        for _, row in monthly_data.iterrows():
+            table_data.append({
+                'date': row['Date'].strftime('%Y-%m-%d'),
+                'sp500': f"{row['Close']:,.2f}",
+                'strategy_2x': f"{row['Buy_Hold_Growth']:,.2f}", # Actually using 1x growth column for reference or 2x? 
+                # Wait, user asked for "Date/ S&P value/ 2x / 3x".
+                # S&P Value usually implies the index price, but for comparison often we show the growth of $1.
+                # Let's show: Date, Close (Index Value), 2x Growth ($), 3x Growth ($)
+                'sp500_val': f"{row['Close']:,.2f}",
+                'strategy_2x_val': f"{row['Lev_2x_Growth']:,.2f}",
+                'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}"
+            })
+            
+        # Reverse list to show newest first
+        table_data.reverse()
+        
+        return output, table_data
     except Exception as e:
         print("Error during analysis:")
         traceback.print_exc()
