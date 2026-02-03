@@ -114,11 +114,16 @@ def analyze_strategy():
         print("Analysis complete. Returning image buffer.")
         plt.close() # Close plot to free memory
         
-        # Prepare Data for Table (Monthly Resample)
-        # Resample to End of Month ('ME') and take the last value
-        monthly_data = data.resample('ME').last()
+        # Prepare Data for Table (Monthly Subset)
+        # User requested to use the EXACT data points from the plot, just subsetted.
+        # resample('ME') changes the Date to the end of the calendar month (e.g. 31st), even if it was specific trading day.
+        # Instead, we will group by Year-Month and pick the last row of each group.
         
-        # Reset index to make Date a column
+        # Create a YearMonth column for grouping
+        data['YearMonth'] = data.index.to_period('M')
+        monthly_data = data.groupby('YearMonth').tail(1)
+        
+        # Reset index to make Date a column for iteration
         monthly_data = monthly_data.reset_index()
         
         # Format for JSON/Template
