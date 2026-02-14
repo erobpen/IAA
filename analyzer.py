@@ -114,21 +114,15 @@ def analyze_strategy():
         print("Analysis complete. Returning image buffer.")
         plt.close() # Close plot to free memory
         
-        # Prepare Data for Table (Monthly Subset)
-        # User requested to use the EXACT data points from the plot, just subsetted.
-        # resample('ME') changes the Date to the end of the calendar month (e.g. 31st), even if it was specific trading day.
-        # Instead, we will group by Year-Month and pick the last row of each group.
-        
-        # Create a YearMonth column for grouping
-        data['YearMonth'] = data.index.to_period('M')
-        monthly_data = data.groupby('YearMonth').tail(1)
+        # Prepare Data for Table (Full Daily Data)
+        # User requested EVERY available data point (Daily).
         
         # Reset index to make Date a column for iteration
-        monthly_data = monthly_data.reset_index()
+        full_data = data.reset_index()
         
         # Format for JSON/Template
         table_data = []
-        for _, row in monthly_data.iterrows():
+        for _, row in full_data.iterrows():
             table_data.append({
                 'date': row['Date'].strftime('%Y-%m-%d'),
                 # S&P Value usually implies the index price, but for comparison often we show the growth of $1.
