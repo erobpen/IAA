@@ -134,13 +134,22 @@ def analyze_strategy():
         # Format for JSON/Template
         table_data = []
         for _, row in full_data.iterrows():
+            # Calculate Scaled SMA (to compare with $10k scaled S&P value)
+            # Scaled_SMA = Portfolio_Value * (Raw_SMA / Raw_Price)
+            # Handle edge case where SMA might be NaN (start of data)
+            if pd.notna(row['SMA_200']) and row['Close'] != 0:
+                scaled_sma = row['Buy_Hold_Growth'] * (row['SMA_200'] / row['Close'])
+                sma_str = f"{scaled_sma:,.2f}"
+            else:
+                sma_str = "-"
+
             table_data.append({
                 'date': row['Date'].strftime('%Y-%m-%d'),
-                # S&P Value usually implies the index price, but for comparison often we show the growth of $1.
-                # Let's show: Date, Close (Index Value), 2x Growth ($), 3x Growth ($)
                 'sp500_val': f"{row['Buy_Hold_Growth']:,.2f}",
+                'sma_val': sma_str,
                 'strategy_3x_bh_val': f"{row['Lev_3x_BH_Growth']:,.2f}",
-                'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}"
+                'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}",
+                'regime': int(row['Regime']) if pd.notna(row['Regime']) else 0
             })
             
         # Reverse list to show newest first
