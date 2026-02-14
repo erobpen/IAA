@@ -73,27 +73,38 @@ def analyze_strategy():
         # Shift regime by 1 day to avoid look-ahead bias (trading occurs on the next day based on today's signal)
         data['Regime'] = data['Regime'].shift(1)
         
-        # Calculate daily log returns
-        data['Log_Returns'] = np.log(data['Close'] / data['Close'].shift(1))
+        # Calculate daily simple returns (for daily rebalancing simulation)
+        data['Simple_Ref'] = data['Close'].pct_change()
+        data['Simple_Ref'].fillna(0, inplace=True)
         
-        # Basic Buy & Hold Strategy (1x)
-        data['Strategy_1x'] = data['Log_Returns'].cumsum()
-        
-        # 3x Buy & Hold Strategy (New)
-        # Pure leverage, always invested
-        data['Strategy_3x_BH_Returns'] = 3 * data['Log_Returns']
-        data['Strategy_3x_BH'] = data['Strategy_3x_BH_Returns'].cumsum()
-        
-        # 3x Strategy (MA Filter)
-        # 3x leverage when Risk-On, 0x (Cash) when Risk-Off
-        data['Strategy_3x_Returns'] = np.where(data['Regime'] == 1, 3 * data['Log_Returns'], 0)
-        data['Strategy_3x'] = data['Strategy_3x_Returns'].cumsum()
-        
-        # Convert back to simple returns for plotting cumulative growth (exp)
+        # Initial Capital
         initial_capital = 10000
-        data['Buy_Hold_Growth'] = initial_capital * np.exp(data['Strategy_1x'])
-        data['Lev_3x_BH_Growth'] = initial_capital * np.exp(data['Strategy_3x_BH'])
-        data['Lev_3x_Growth'] = initial_capital * np.exp(data['Strategy_3x'])
+        
+        # 1. Buy & Hold (1x)
+        # Cumulative Product of (1 + Return)
+        data['Strategy_1x_Daily'] = data['Simple_Ref']
+        data['Buy_Hold_Growth'] = initial_capital * (1 + data['Strategy_1x_Daily']).cumprod()
+        
+        # 2. 3x Buy & Hold (Pure Leverage)
+        # Daily Return = 3 * Index_Return
+        # If index drops > 33.3%, account hits 0 (Bankruptcy)
+        data['Strategy_3x_BH_Daily'] = 3 * data['Simple_Ref']
+        
+        # Apply leverage constraint: cannot lose more than 100% in a day (floor at -1.0)
+        # Realistically, if it hits -1, you are wiped out.
+        data['Strategy_3x_BH_Daily'] = data['Strategy_3x_BH_Daily'].clip(lower=-1.0)
+        
+        data['Lev_3x_BH_Growth'] = initial_capital * (1 + data['Strategy_3x_BH_Daily']).cumprod()
+        
+        # 3. 3x Strategy (MA Filter)
+        # 3x leverage when Risk-On, 0x (Cash) when Risk-Off
+        # When in cash, return is 0 (ignoring risk-free rate for simplicity)
+        data['Strategy_3x_Daily'] = np.where(data['Regime'] == 1, 3 * data['Simple_Ref'], 0)
+        
+        # Apply wipeout constraint
+        data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)
+        
+        data['Lev_3x_Growth'] = initial_capital * (1 + data['Strategy_3x_Daily']).cumprod()
         
         print("Plotting results...")
         plt.figure(figsize=(12, 6))
