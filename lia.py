@@ -50,13 +50,13 @@ def analyze_lia():
         merged['Cumulative_Inflation'] = merged['CPI'] / base_cpi
         
         merged['Real_SP500'] = merged['Buy_Hold_Growth'] / merged['Cumulative_Inflation']
-        merged['Real_Strategy_3x_BH'] = merged['Lev_3x_BH_Growth'] / merged['Cumulative_Inflation']
+        merged['Real_Strategy_3x'] = merged['Lev_3x_Growth'] / merged['Cumulative_Inflation']
         
         # 5. Plotting
         plt.figure(figsize=(10, 6))
         # Using Semilog
         plt.semilogy(merged['Year'], merged['Real_SP500'], label='Real S&P 500 (Inf. Adj.)', color='#94a3b8', linewidth=2)
-        plt.semilogy(merged['Year'], merged['Real_Strategy_3x_BH'], label='Real 3x Buy & Hold (Inf. Adj.)', color='#f97316', linewidth=2)
+        plt.semilogy(merged['Year'], merged['Real_Strategy_3x'], label='Real 3x Strategy (Inf. Adj.)', color='#f97316', linewidth=2)
         
         plt.title('Inflation Adjusted Performance (Year-End) - $10k Initial (1928)')
         plt.ylabel('Real Portfolio Value ($1928)')
@@ -81,10 +81,10 @@ def analyze_lia():
             table_data.append({
                 'year': int(row['Year']),
                 'real_sp500': f"${row['Real_SP500']:,.0f}",
-                'real_3x': f"${row['Real_Strategy_3x_BH']:,.0f}",
+                'real_3x': f"${row['Real_Strategy_3x']:,.0f}",
                 'inflation_factor': f"{row['Cumulative_Inflation']:.2f}x",
                 'nominal_sp500': f"${row['Buy_Hold_Growth']:,.0f}",
-                'nominal_3x': f"${row['Lev_3x_BH_Growth']:,.0f}"
+                'nominal_3x': f"${row['Lev_3x_Growth']:,.0f}"
             })
             
         return img, table_data
