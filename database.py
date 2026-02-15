@@ -28,11 +28,9 @@ def init_db():
     """Create tables if they don't exist."""
     print("Initializing database...")
     try:
-        if not inspect(engine).has_table("stock_prices"):
-            Base.metadata.create_all(bind=engine)
-            print("Tables created.")
-        else:
-            print("Tables already exist.")
+        # iterate over all tables and create them if they don't exist
+        Base.metadata.create_all(bind=engine)
+        print("Tables initialized.")
     except Exception as e:
         print(f"Error initializing DB: {e}")
 
@@ -103,4 +101,66 @@ def get_all_stock_data(ticker):
         return df
     except Exception as e:
         print(f"Error reading data: {e}")
+        return pd.DataFrame()
+
+# --- Inflation Data Support ---
+
+class InflationData(Base):
+    __tablename__ = 'inflation_data'
+    
+    date = Column(Date, primary_key=True)
+    cpi = Column(Float) # CPIAUCNS value
+
+def get_latest_inflation_date():
+    """Get the latest date we have inflation data for."""
+    try:
+        session = SessionLocal()
+        last_entry = session.query(InflationData).order_by(InflationData.date.desc()).first()
+        session.close()
+        return last_entry.date if last_entry else None
+    except Exception as e:
+        print(f"Error getting latest inflation date: {e}")
+        return None
+
+def save_inflation_data(df):
+    """Save inflation dataframe to DB."""
+    session = SessionLocal()
+    try:
+        # Expecting DataFrame with DateTime index and 'CPIAUCNS' column (or similar)
+        # We will iterate and merge
+        for date, row in df.iterrows():
+            # Check if exists
+            exists = session.query(InflationData).filter_by(date=date.date()).first()
+            if not exists:
+                # Value might be in 'CPIAUCNS' or just the first column
+                val = row.iloc[0] 
+                record = InflationData(date=date.date(), cpi=float(val))
+                session.add(record)
+        
+        session.commit()
+        print("Inflation data saved successfully.")
+    except Exception as e:
+        session.rollback()
+        print(f"Error saving inflation data: {e}")
+    finally:
+        session.close()
+
+def get_all_inflation_data():
+    """Get all inflation data from DB as DataFrame."""
+    try:
+        session = SessionLocal()
+        data = session.query(InflationData).order_by(InflationData.date).all()
+        
+        if not data:
+            return pd.DataFrame()
+            
+        df = pd.DataFrame([{'Date': d.date, 'CPI': d.cpi} for d in data])
+        
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        
+        session.close()
+        return df
+    except Exception as e:
+        print(f"Error getting inflation data: {e}")
         return pd.DataFrame()

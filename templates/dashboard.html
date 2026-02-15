@@ -200,7 +200,7 @@
         <!-- LEVEL 1 TABS -->
         <div class="tabs-nav">
             <button class="tab-btn active" onclick="openTab(event, 'leverage-tab')">Leverage</button>
-            <!-- Placeholder for future tabs -->
+            <button class="tab-btn" onclick="openTab(event, 'inflation-tab')">Inflation</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -226,7 +226,6 @@
                         <thead
                             style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <tr>
-                                <th
                                 <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Date</th>
                                 <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">S&P 500 ($10k)</th>
                                 <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">SMA 200 ($10k)</th>
@@ -245,6 +244,53 @@
                                 <td style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.regime == 1 else '#22c55e' }}; font-weight: bold;">
                                     {{ row.strategy_3x_val }}
                                 </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- INFLATION TAB CONTENT -->
+        <div id="inflation-tab" class="tab-content">
+
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'inf-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'inf-data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="inf-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if inf_plot_url %}
+                    <img src="data:image/png;base64,{{ inf_plot_url }}" alt="Inflation Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading Inflation Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="inf-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Year</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">Inflation (Annual %)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">Cumulative Factor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in inf_table %}
+                            <tr style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                                <td style="padding: 10px;">{{ row.year }}</td>
+                                <td style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.inflation_pct != '-' and row.inflation_pct.rstrip('%')|float > 5 else 'var(--text-color)' }}">{{ row.inflation_pct }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.cumulative }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
