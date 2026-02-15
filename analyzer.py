@@ -10,113 +10,98 @@ import traceback
 from datetime import timedelta
 import database
 
-def analyze_strategy():
-    try:
-        print("Initializing database...")
-        database.init_db()
+def get_strategy_data():
+    """
+    Fetches data and performs all strategy calculations.
+    Returns the prepared DataFrame.
+    """
+    print("Getting strategy data...")
+    database.init_db()
+    
+    ticker = "^GSPC"
+    
+    # 1. Check what we have in DB
+    last_date = database.get_latest_date(ticker)
+    
+    today = pd.Timestamp.today().date()
+    
+    # 2. Determine download range
+    if last_date:
+        start_date = (last_date + timedelta(days=1)).strftime('%Y-%m-%d')
+    else:
+        start_date = "1928-01-01"
         
-        ticker = "^GSPC"
-        
-        # 1. Check what we have in DB
-        last_date = database.get_latest_date(ticker)
-        
-        today = pd.Timestamp.today().date()
-        
-        # 2. Determine download range
-        if last_date:
-            print(f"Found data up to {last_date}. Checking for new data...")
-            start_date = (last_date + timedelta(days=1)).strftime('%Y-%m-%d')
-        else:
-            print("No data in DB. Downloading full history...")
-            start_date = "1928-01-01"
-            
-        end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
-        
-        # 3. Download only if start_date < today
-        # Convert start_date string back to date object for comparison
-        start_date_obj = pd.to_datetime(start_date).date()
-        
-        if start_date_obj <= today:
-            print(f"Downloading from {start_date} to {end_date}...")
+    end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
+    
+    # 3. Download only if start_date < today
+    start_date_obj = pd.to_datetime(start_date).date()
+    
+    if start_date_obj <= today:
+        try:
             new_data = yf.download(ticker, start=start_date, end=end_date, progress=False)
             
             if not new_data.empty:
-                # Handle MultiIndex if present (yfinance quirk)
+                # Handle MultiIndex if present
                 if isinstance(new_data.columns, pd.MultiIndex):
-                    # Try to handle the structure flexibly
                     try:
-                        # If ticker is in level 1
                         if ticker in new_data.columns.levels[1]:
                              new_data = new_data.xs(ticker, level=1, axis=1)
                     except:
-                        # If structure is different, just flatten level 0
                          new_data.columns = new_data.columns.get_level_values(0)
 
-                print(f"Downloaded {len(new_data)} new rows.")
                 database.save_stock_data(new_data, ticker)
-            else:
-                print("No new data found from Yahoo.")
-        
-        # 4. Load ALL data from DB for analysis
-        print("Loading full history from database...")
-        data = database.get_all_stock_data(ticker)
+        except Exception as e:
+            print(f"Error downloading data: {e}")
+    
+    # 4. Load ALL data from DB for analysis
+    data = database.get_all_stock_data(ticker)
+    
+    if data.empty:
+         return pd.DataFrame()
+
+    # Calculate 200-day Simple Moving Average
+    data['SMA_200'] = data['Close'].rolling(window=200).mean()
+
+    data['Regime'] = np.where(data['Close'] > data['SMA_200'], 1, 0)
+    # Shift regime by 1 day to avoid look-ahead bias
+    data['Regime'] = data['Regime'].shift(1)
+    
+    # Calculate daily simple returns (Price Return)
+    data['Simple_Ref'] = data['Close'].pct_change()
+    data['Simple_Ref'].fillna(0, inplace=True)
+    
+    # Simulated Total Return (Adding Dividends) -> 0 as per user request
+    daily_dividend = 0
+    data['Total_Return_Daily'] = data['Simple_Ref'] + daily_dividend
+    
+    # Initial Capital
+    initial_capital = 10000
+    
+    # 1. Buy & Hold (1x)
+    data['Strategy_1x_Daily'] = data['Total_Return_Daily']
+    data['Buy_Hold_Growth'] = initial_capital * (1 + data['Strategy_1x_Daily']).cumprod()
+    
+    # 2. 3x Buy & Hold
+    data['Strategy_3x_BH_Daily'] = 3 * data['Total_Return_Daily']
+    # Constraint
+    data['Strategy_3x_BH_Daily'] = data['Strategy_3x_BH_Daily'].clip(lower=-1.0)
+    data['Lev_3x_BH_Growth'] = initial_capital * (1 + data['Strategy_3x_BH_Daily']).cumprod()
+    
+    # 3. 3x Strategy (MA Filter)
+    data['Strategy_3x_Daily'] = np.where(data['Regime'] == 1, 3 * data['Total_Return_Daily'], 0)
+    data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)
+    data['Lev_3x_Growth'] = initial_capital * (1 + data['Strategy_3x_Daily']).cumprod()
+    
+    return data
+
+def analyze_strategy():
+    try:
+        data = get_strategy_data()
         
         if data.empty:
-             raise Exception("No data available in database and download failed!")
+             raise Exception("No data available!")
              
-        print(f"Total data rows: {len(data)}")
-
-        # Calculate 200-day Simple Moving Average
-        data['SMA_200'] = data['Close'].rolling(window=200).mean()
-
-        data['Regime'] = np.where(data['Close'] > data['SMA_200'], 1, 0)
-        # Shift regime by 1 day to avoid look-ahead bias (trading occurs on the next day based on today's signal)
-        data['Regime'] = data['Regime'].shift(1)
-        
-        # Calculate daily simple returns (Price Return)
-        data['Simple_Ref'] = data['Close'].pct_change()
-        data['Simple_Ref'].fillna(0, inplace=True)
-        
-        # Simulated Total Return (Adding Dividends)
-        # User requested to dismiss dividends entirely.
-        # We revert to pure Price Return (^GSPC) for all strategies.
-        daily_dividend = 0
-        
-        # Total Daily Return = Price Return + Daily Dividend (0)
-        data['Total_Return_Daily'] = data['Simple_Ref'] + daily_dividend
-        
-        # Initial Capital
-        initial_capital = 10000
-        
-        # 1. Buy & Hold (1x) - Total Return
-        # Cumulative Product of (1 + Return)
-        data['Strategy_1x_Daily'] = data['Total_Return_Daily']
-        data['Buy_Hold_Growth'] = initial_capital * (1 + data['Strategy_1x_Daily']).cumprod()
-        
-        # 2. 3x Buy & Hold (Pure Leverage)
-        # Daily Return = 3 * Total_Return_Daily (Simulating 3x exposure to TR)
-        # Subtract Borrow Cost? Theoretical studies often ignore it or assume RiskFree = Cost.
-        # We will use Total Return gross of borrowing costs to match "optimistic" papers, 
-        # or assume Borrow Cost ~ Dividend Yield cancellation (Net Carry = 0?).
-        # User requested consistency with "Leverage for the Long Run" (which shows huge gains), 
-        # so we use the levered Total Return.
-        data['Strategy_3x_BH_Daily'] = 3 * data['Total_Return_Daily']
-        
-        # Apply leverage constraint: cannot lose more than 100% in a day (floor at -1.0)
-        data['Strategy_3x_BH_Daily'] = data['Strategy_3x_BH_Daily'].clip(lower=-1.0)
-        
-        data['Lev_3x_BH_Growth'] = initial_capital * (1 + data['Strategy_3x_BH_Daily']).cumprod()
-        
-        # 3. 3x Strategy (MA Filter)
-        # 3x leverage when Risk-On, 0x (Cash) when Risk-Off
-        # When in Cash: Return = 0 (or risk-free rate). We use 0 for simplicity.
-        # When Invested: Return = 3x Total Return
-        data['Strategy_3x_Daily'] = np.where(data['Regime'] == 1, 3 * data['Total_Return_Daily'], 0)
-        
-        # Apply wipeout constraint
-        data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)
-        
-        data['Lev_3x_Growth'] = initial_capital * (1 + data['Strategy_3x_Daily']).cumprod()
+        # ... Rest of plotting code ...
         
         print("Plotting results...")
         plt.figure(figsize=(12, 6))
