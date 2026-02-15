@@ -90,15 +90,21 @@ def analyze_inflation():
         annual_data = annual_data.reset_index()
         
         table_data = []
+        initial_amount = 10000
+        
         for _, row in annual_data.iterrows():
             inf_pct = row['Inflation_Pct']
             # First row has NaN inflation pct
             inf_str = f"{inf_pct:.2f}%" if pd.notna(inf_pct) else "-"
             
+            cumulative = row['Cumulative_Factor']
+            purchasing_power = initial_amount / cumulative
+            
             table_data.append({
                 'year': row['Date'].year,
                 'inflation_pct': inf_str,
-                'cumulative': f"{row['Cumulative_Factor']:.2f}x"
+                'cumulative': f"{cumulative:.2f}x",
+                'purchasing_power': f"${purchasing_power:,.0f}"
             })
             
         # Reverse to show newest first

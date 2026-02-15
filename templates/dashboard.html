@@ -226,22 +226,35 @@
                         <thead
                             style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <tr>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Date</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">S&P 500 ($10k)</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">SMA 200 ($10k)</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">3x Buy & Hold ($10k)</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">3x Strategy ($10k)</th>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    S&P 500 ($10k)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    SMA 200 ($10k)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x Buy & Hold ($10k)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x Strategy ($10k)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in table_data %}
-                            <tr style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                            <tr
+                                style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
                                 <td style="padding: 10px;">{{ row.date }}</td>
                                 <td style="padding: 10px; text-align: right;">{{ row.sp500_val }}</td>
                                 <td style="padding: 10px; text-align: right; color: #94a3b8;">{{ row.sma_val }}</td>
-                                <td style="padding: 10px; text-align: right; color: #f97316;">{{ row.strategy_3x_bh_val }}</td>
+                                <td style="padding: 10px; text-align: right; color: #f97316;">{{ row.strategy_3x_bh_val
+                                    }}</td>
                                 <!-- Regime 1 = Invested (RED), Regime 0 = Cash (GREEN) -->
-                                <td style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.regime == 1 else '#22c55e' }}; font-weight: bold;">
+                                <td
+                                    style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.regime == 1 else '#22c55e' }}; font-weight: bold;">
                                     {{ row.strategy_3x_val }}
                                 </td>
                             </tr>
@@ -280,17 +293,31 @@
                         <thead
                             style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <tr>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Year</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">Inflation (Annual %)</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">Cumulative Factor</th>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Year</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Inflation (Annual %)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Cumulative Factor</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Purchasing Power ($10k)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in inf_table %}
-                            <tr style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                            <tr
+                                style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
                                 <td style="padding: 10px;">{{ row.year }}</td>
-                                <td style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.inflation_pct != '-' and row.inflation_pct.rstrip('%')|float > 5 else 'var(--text-color)' }}">{{ row.inflation_pct }}</td>
+                                <td
+                                    style="padding: 10px; text-align: right; color: {{ '#ef4444' if row.inflation_pct != '-' and row.inflation_pct.rstrip('%')|float > 5 else 'var(--text-color)' }}">
+                                    {{ row.inflation_pct }}</td>
                                 <td style="padding: 10px; text-align: right;">{{ row.cumulative }}</td>
+                                <td style="padding: 10px; text-align: right; color: #f97316;">{{ row.purchasing_power }}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
