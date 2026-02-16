@@ -164,3 +164,99 @@ def get_all_inflation_data():
     except Exception as e:
         print(f"Error getting inflation data: {e}")
         return pd.DataFrame()
+
+# --- Market Statistics Data Support (Shiller) ---
+
+class MarketStats(Base):
+    __tablename__ = 'market_stats'
+    
+    date = Column(Date, primary_key=True)
+    sp500 = Column(Float)
+    dividend = Column(Float)
+    earnings = Column(Float)
+    cpi = Column(Float)
+    long_interest_rate = Column(Float)
+    real_price = Column(Float)
+    real_dividend = Column(Float)
+    real_earnings = Column(Float)
+    pe_ratio = Column(Float)
+
+def get_latest_market_stats_date():
+    """Get the latest date we have market stats for."""
+    try:
+        session = SessionLocal()
+        last_entry = session.query(MarketStats).order_by(MarketStats.date.desc()).first()
+        session.close()
+        return last_entry.date if last_entry else None
+    except Exception as e:
+        print(f"Error getting latest market stats date: {e}")
+        return None
+
+def save_market_stats(df):
+    """Save market stats dataframe to DB."""
+    session = SessionLocal()
+    # Helper to clean numpy/pandas types
+    def safe_float(val):
+        if pd.isna(val) or val is None:
+            return None
+        return float(val)
+
+    try:
+        # Expecting DataFrame with DateTime index and specific columns
+        # We will iterate and merge
+        for date, row in df.iterrows():
+            # Check if exists
+            exists = session.query(MarketStats).filter_by(date=date.date()).first()
+            if not exists:
+                record = MarketStats(
+                    date=date.date(),
+                    sp500=safe_float(row.get('SP500')),
+                    dividend=safe_float(row.get('Dividend')),
+                    earnings=safe_float(row.get('Earnings')),
+                    cpi=safe_float(row.get('CPI')),
+                    long_interest_rate=safe_float(row.get('Long Interest Rate')),
+                    real_price=safe_float(row.get('Real Price')),
+                    real_dividend=safe_float(row.get('Real Dividend')),
+                    real_earnings=safe_float(row.get('Real Earnings')),
+                    pe_ratio=safe_float(row.get('PE10'))
+                )
+                session.add(record)
+        
+        session.commit()
+        print("Market stats saved successfully.")
+    except Exception as e:
+        session.rollback()
+        print(f"Error saving market stats: {e}")
+    finally:
+        session.close()
+
+def get_all_market_stats():
+    """Get all market stats from DB as DataFrame."""
+    try:
+        session = SessionLocal()
+        data = session.query(MarketStats).order_by(MarketStats.date).all()
+        
+        if not data:
+            return pd.DataFrame()
+            
+        df = pd.DataFrame([{
+            'Date': d.date,
+            'SP500': d.sp500,
+            'Dividend': d.dividend,
+            'Earnings': d.earnings,
+            'CPI': d.cpi,
+            'Long Interest Rate': d.long_interest_rate,
+            'Real Price': d.real_price,
+            'Real Dividend': d.real_dividend,
+            'Real Earnings': d.real_earnings,
+            'PE10': d.pe_ratio
+        } for d in data])
+        
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        
+        session.close()
+        return df
+    except Exception as e:
+        print(f"Error getting market stats: {e}")
+        return pd.DataFrame()

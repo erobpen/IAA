@@ -202,6 +202,7 @@
             <button class="tab-btn active" onclick="openTab(event, 'leverage-tab')">Leverage</button>
             <button class="tab-btn" onclick="openTab(event, 'inflation-tab')">Inflation</button>
             <button class="tab-btn" onclick="openTab(event, 'lia-tab')">LIA</button>
+            <button class="tab-btn" onclick="openTab(event, 'dividend-tab')">Dividend</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -388,6 +389,69 @@
                                 <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.nominal_sp500 }}
                                 </td>
                                 <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.nominal_3x }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- DIVIDEND TAB CONTENT -->
+        <div id="dividend-tab" class="tab-content">
+
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'div-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'div-data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="div-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if div_plot_url %}
+                    <img src="data:image/png;base64,{{ div_plot_url }}" alt="Dividend Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading Dividend Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="div-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    S&P 500</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Dividend</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Yield</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                    PE Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in div_table %}
+                            <tr
+                                style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                                <td style="padding: 10px;">{{ row.date }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.sp500 }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.dividend }}</td>
+                                <td style="padding: 10px; text-align: right; color: #22c55e; font-weight: bold;">{{
+                                    row.yield }}</td>
+                                <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.pe_ratio }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

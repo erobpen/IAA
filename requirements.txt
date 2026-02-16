@@ -6,3 +6,5 @@ matplotlib
 numpy
 SQLAlchemy
 psycopg2-binary
+requests
+xlrd

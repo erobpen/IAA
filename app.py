@@ -3,6 +3,7 @@ import base64
 from analyzer import analyze_strategy
 import inflation
 import lia
+import dividend_module
 
 app = Flask(__name__)
 
@@ -25,6 +26,13 @@ def dashboard():
         lia_plot_url = base64.b64encode(lia_img.getvalue()).decode()
     else:
         lia_plot_url = None
+
+    # Dividend Analysis
+    div_img, div_table = dividend_module.analyze_dividend()
+    if div_img:
+        div_plot_url = base64.b64encode(div_img.read()).decode()
+    else:
+        div_plot_url = None
         
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
@@ -32,7 +40,9 @@ def dashboard():
                            inf_plot_url=inf_plot_url,
                            inf_table=inf_table,
                            lia_plot_url=lia_plot_url,
-                           lia_table=lia_table)
+                           lia_table=lia_table,
+                           div_plot_url=div_plot_url,
+                           div_table=div_table)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
