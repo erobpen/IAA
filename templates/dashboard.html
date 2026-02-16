@@ -203,6 +203,7 @@
             <button class="tab-btn" onclick="openTab(event, 'inflation-tab')">Inflation</button>
             <button class="tab-btn" onclick="openTab(event, 'lia-tab')">LIA</button>
             <button class="tab-btn" onclick="openTab(event, 'dividend-tab')">Dividend</button>
+            <button class="tab-btn" onclick="openTab(event, 'lida-tab')">LIDA</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -452,6 +453,75 @@
                                 <td style="padding: 10px; text-align: right; color: #22c55e; font-weight: bold;">{{
                                     row.yield }}</td>
                                 <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.pe_ratio }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- LIDA TAB CONTENT -->
+        <div id="lida-tab" class="tab-content">
+
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'lida-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'lida-data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="lida-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if lida_plot_url %}
+                    <img src="data:image/png;base64,{{ lida_plot_url }}" alt="LIDA Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading LIDA Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="lida-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Year</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Real S&P 500</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Real 3x Strategy</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Div. Yield</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                    Nominal S&P</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                    Nominal 3x</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in lida_table %}
+                            <tr
+                                style="border-bottom: 1px solid var(--border-color); background-color: {{ '#1e293b' if loop.index is odd else '#0f172a' }};">
+                                <td style="padding: 10px;">{{ row.year }}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #10b981;">{{
+                                    row.real_sp500 }}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #8b5cf6;">{{
+                                    row.real_3x }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.div_yield }}</td>
+                                <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.nominal_sp500 }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.nominal_3x }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

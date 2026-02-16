@@ -75,12 +75,15 @@ def save_stock_data(df, ticker):
 
     db = SessionLocal()
     try:
-        # Bulk save is faster
-        db.bulk_save_objects(records)
+        # Use merge to handle potential duplicates (slower but safer)
+        for record in records:
+            db.merge(record)
+            
         db.commit()
         print(f"Saved {len(records)} records for {ticker}.")
     except Exception as e:
         print(f"Error saving data: {e}")
+        db.rollback()
         db.rollback()
     finally:
         db.close()
