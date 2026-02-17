@@ -4,7 +4,7 @@ from analyzer import analyze_strategy
 import inflation
 
 import dividend_module
-import lida
+import lda
 
 app = Flask(__name__)
 
@@ -30,12 +30,12 @@ def dashboard():
     else:
         div_plot_url = None
 
-    # LIDA Analysis
-    lida_img, lida_table = lida.analyze_lida()
-    if lida_img:
-        lida_plot_url = base64.b64encode(lida_img.read()).decode()
+    # LDA Analysis
+    lda_img, lda_table = lda.analyze_lda()
+    if lda_img:
+        lda_plot_url = base64.b64encode(lda_img.read()).decode()
     else:
-        lida_plot_url = None
+        lda_plot_url = None
         
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
@@ -45,8 +45,8 @@ def dashboard():
 
                            div_plot_url=div_plot_url,
                            div_table=div_table,
-                           lida_plot_url=lida_plot_url,
-                           lida_table=lida_table)
+                           lda_plot_url=lda_plot_url,
+                           lda_table=lda_table)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
