@@ -5,6 +5,7 @@ import inflation
 
 import dividend_module
 import lda
+import small_cap
 
 app = Flask(__name__)
 
@@ -37,6 +38,13 @@ def dashboard():
     else:
         lda_plot_url = None
         
+    # Small Cap Analysis
+    sc_img, sc_table = small_cap.analyze_small_cap()
+    if sc_img:
+        sc_plot_url = base64.b64encode(sc_img.read()).decode()
+    else:
+        sc_plot_url = None
+
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
                            table_data=table_data,
@@ -46,7 +54,9 @@ def dashboard():
                            div_plot_url=div_plot_url,
                            div_table=div_table,
                            lda_plot_url=lda_plot_url,
-                           lda_table=lda_table)
+                           lda_table=lda_table,
+                           sc_plot_url=sc_plot_url,
+                           sc_table=sc_table)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

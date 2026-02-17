@@ -226,6 +226,7 @@
 
             <button class="tab-btn" onclick="openTab(event, 'dividend-tab')">Dividend</button>
             <button class="tab-btn" onclick="openTab(event, 'lda-tab')">LDA</button>
+            <button class="tab-btn" onclick="openTab(event, 'sc-tab')">Small Cap</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -479,6 +480,57 @@
                 </div>
             </div>
 
+        </div>
+
+    </div>
+
+    <!-- SMALL CAP TAB CONTENT -->
+    <div id="sc-tab" class="tab-content">
+
+        <!-- LEVEL 2 TABS (Sub Tabs) -->
+        <div class="sub-tabs-nav">
+            <button class="sub-tab-btn active" onclick="openSubTab(event, 'sc-graph-view')">Graph</button>
+            <button class="sub-tab-btn" onclick="openSubTab(event, 'sc-data-view')">Data</button>
+        </div>
+
+        <!-- GRAPH VIEW -->
+        <div id="sc-graph-view" class="sub-tab-content active">
+            <div class="chart-container">
+                {% if sc_plot_url %}
+                <img src="data:image/png;base64,{{ sc_plot_url }}" alt="Small Cap Analysis" class="main-plot">
+                {% else %}
+                <p class="placeholder-text">Loading Small Cap Data...</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- DATA VIEW -->
+        <div id="sc-data-view" class="sub-tab-content">
+            <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead
+                        style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                Year</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Portfolio Value</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Annual Return</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in sc_table %}
+                        <tr>
+                            <td style="padding: 10px;">{{ row.year }}</td>
+                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #d946ef;">{{
+                                row.portfolio_value }}</td>
+                            <td style="padding: 10px; text-align: right;">{{ row.annual_return }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
