@@ -508,16 +508,19 @@
 
         // Level 2 Sub-Tab Switching
         function openSubTab(evt, subTabName) {
-            // Look within the active main tab (or globally since IDs are unique)
-            // Hide all sub-tab-content
+            // Find the parent container (the active main tab content)
+            // The button is inside .sub-tabs-nav, which is inside .tab-content
+            var parentTabContent = evt.currentTarget.closest(".tab-content");
+
+            // Hide all sub-tab-content within this parent only
             var i, subtabcontent, subtablinks;
-            subtabcontent = document.getElementsByClassName("sub-tab-content");
+            subtabcontent = parentTabContent.getElementsByClassName("sub-tab-content");
             for (i = 0; i < subtabcontent.length; i++) {
                 subtabcontent[i].classList.remove("active");
             }
 
-            // Deactivate all sub-tab-btn
-            subtablinks = document.getElementsByClassName("sub-tab-btn");
+            // Deactivate all sub-tab-btn within this parent only
+            subtablinks = parentTabContent.getElementsByClassName("sub-tab-btn");
             for (i = 0; i < subtablinks.length; i++) {
                 subtablinks[i].classList.remove("active");
             }
