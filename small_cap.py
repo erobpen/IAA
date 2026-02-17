@@ -166,30 +166,19 @@ def analyze_small_cap():
         if df.empty:
             return None, []
             
-        # 2. Resample to Annual for Display (Graph/Table)
-        # We need cumulative growth calculation first on Monthly data to be accurate
+        # 2. Monthly Data Processing (No Annual Resampling)
+        # Calculate Index (Base 100)
+        df['Growth_Index'] = (1 + df['Small_Value_Ret']).cumprod() * 100.0
         
-        initial_capital = 10000.0
+        # We want to show monthly data: Date, Yield (%), Index Value
         
-        # Calculate Cumulative Growth Index (Monthly)
-        df['Growth_Index'] = (1 + df['Small_Value_Ret']).cumprod()
-        df['Portfolio_Value'] = initial_capital * df['Growth_Index']
-        
-        # Now resample to Annual (Year End) for the UI
-        annual_df = df.resample('YE').last() # 'YE' or 'A'
-        
-        # Calculate Annual Return for Table
-        # (Year End Value / Prev Year End Value) - 1
-        annual_df['Annual_Return'] = annual_df['Portfolio_Value'].pct_change()
-        
-        # Handle first year manually if needed, or just let it be NaN
-        
-        # 3. Plotting
+        # 3. Plotting (Optional based on user request "maybe if possible some index")
+        # Let's plot the Index Value (base 100) on semilog
         plt.figure(figsize=(10, 6))
-        plt.semilogy(annual_df.index, annual_df['Portfolio_Value'], label='Small Cap Value (US Proxy)', color='#d946ef', linewidth=2)
+        plt.semilogy(df.index, df['Growth_Index'], label='Small Cap Value Index (Base 100)', color='#d946ef', linewidth=1.5)
         
-        plt.title('Small Cap Value Performance ($10k Initial)')
-        plt.ylabel('Portfolio Value ($)')
+        plt.title('Small Cap Value Index (1926=100)')
+        plt.ylabel('Index Value (Log Scale)')
         plt.xlabel('Year')
         plt.grid(True, which="both", ls="-", alpha=0.2)
         plt.legend()
@@ -199,18 +188,21 @@ def analyze_small_cap():
         img.seek(0)
         plt.close()
         
-        # 4. Table Data
-        # Sort desc by Year
-        annual_df['Year'] = annual_df.index.year
-        table_records = annual_df.sort_values(by='Year', ascending=False)
+        # 4. Table Data (Monthly)
+        # Sort desc by Date
+        # Since it's monthly, we have 1000+ rows. The frontend might need to handle this or just show it.
+        # Format Date as YYYY-MM
+        table_records = df.sort_index(ascending=False)
         
         table_data = []
-        for _, row in table_records.iterrows():
-            ret_str = f"{row['Annual_Return']*100:.2f}%" if pd.notna(row['Annual_Return']) else "-"
+        for date_idx, row in table_records.iterrows():
+            ret_val = row['Small_Value_Ret']
+            ret_str = f"{ret_val*100:.2f}%" if pd.notna(ret_val) else "-"
+            
             table_data.append({
-                'year': int(row['Year']),
-                'portfolio_value': f"${row['Portfolio_Value']:,.0f}",
-                'annual_return': ret_str
+                'date': date_idx.strftime('%Y-%m'),
+                'yield': ret_str,
+                'index_value': f"{row['Growth_Index']:,.2f}"
             })
             
         return img, table_data

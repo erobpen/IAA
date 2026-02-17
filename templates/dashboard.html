@@ -512,20 +512,20 @@
                         style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <tr>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
-                                Year</th>
+                                Date</th>
                             <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Portfolio Value</th>
+                                Monthly Yield</th>
                             <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Annual Return</th>
+                                Small Cap Index</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in sc_table %}
                         <tr>
-                            <td style="padding: 10px;">{{ row.year }}</td>
+                            <td style="padding: 10px;">{{ row.date }}</td>
                             <td style="padding: 10px; text-align: right; font-weight: bold; color: #d946ef;">{{
-                                row.portfolio_value }}</td>
-                            <td style="padding: 10px; text-align: right;">{{ row.annual_return }}</td>
+                                row.yield }}</td>
+                            <td style="padding: 10px; text-align: right;">{{ row.index_value }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
