@@ -78,5 +78,22 @@ def get_inflation_cagr():
     except Exception as e:
         return jsonify({'cagr': None, 'error': str(e)})
 
+@app.route('/api/small_cap_cagr')
+def get_small_cap_cagr():
+    from flask import request, jsonify
+    try:
+        start_year = int(request.args.get('start'))
+        end_year = int(request.args.get('end'))
+        
+        cagr = small_cap.calculate_period_cagr(start_year, end_year)
+        
+        if cagr is not None:
+             return jsonify({'cagr': f"{cagr:.2f}%", 'error': None})
+        else:
+             return jsonify({'cagr': None, 'error': 'Invalid Range or No Data'})
+             
+    except Exception as e:
+        return jsonify({'cagr': None, 'error': str(e)})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

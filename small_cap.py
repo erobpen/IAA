@@ -225,5 +225,61 @@ def analyze_small_cap():
         traceback.print_exc()
         return None, [], "Error"
 
+def calculate_period_cagr(start_year, end_year):
+    """
+    Calculates the CAGR of Small Cap Index between two years.
+    Returns the percentage as a float.
+    """
+    try:
+        df = get_small_cap_data()
+        
+        if df.empty:
+            return None
+            
+        # Ensure we have datetime index
+        if not isinstance(df.index, pd.DatetimeIndex):
+             # Try to convert if 'Date' column exists. 
+             # Based on previous code, Date is index.
+             pass
+             
+        # Calculate Growth Index if not present
+        if 'Growth_Index' not in df.columns:
+            df['Growth_Index'] = (1 + df['Small_Value_Ret']).cumprod() * 100.0
+            
+        # Filter by years
+        # Start: We want the value at the START of the period? 
+        # Or usually investment returns are from End of Year X to End of Year Y.
+        # Let's take End of start_year as base (or Beginning of start_year?)
+        # For annual CAGR, usually: Value at End / Value at Start.
+        # If user inputs 1930 to 1940. We want growth from 1930 (start) to 1940 (end).
+        # We need Index Value at Dec 1929 (or Jan 1930) and Dec 1940.
+        
+        # Let's try to get data for start_year and end_year.
+        # We will use the last available data point for start_year and end_year.
+        
+        # Filter for start year
+        start_data = df[df.index.year == start_year]
+        if start_data.empty:
+            return None
+        start_val = start_data['Growth_Index'].iloc[-1]
+        
+        # Filter for end year
+        end_data = df[df.index.year == end_year]
+        if end_data.empty:
+            return None
+        end_val = end_data['Growth_Index'].iloc[-1]
+        
+        years = end_year - start_year
+        
+        if years <= 0:
+            return 0.0
+            
+        cagr = (end_val / start_val) ** (1 / years) - 1
+        return cagr * 100.0
+
+    except Exception as e:
+        print(f"Error in calculate_period_cagr small_cap: {e}")
+        return None
+
 if __name__ == "__main__":
     analyze_small_cap()

@@ -507,12 +507,22 @@
         <div class="sub-tabs-nav">
             <button class="sub-tab-btn active" onclick="openSubTab(event, 'sc-graph-view')">Graph</button>
             <button class="sub-tab-btn" onclick="openSubTab(event, 'sc-data-view')">Data</button>
-            {% if sc_cagr %}
-            <span
-                style="align-self: center; margin-left: auto; font-weight: 600; color: #d946ef; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155;">
-                Avg Yearly Yield: {{ sc_cagr }}
-            </span>
-            {% endif %}
+            <!-- Interactive Calculator -->
+            <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
+                <input type="number" id="sc-start-year" placeholder="Start Year"
+                    style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                <input type="number" id="sc-end-year" placeholder="End Year"
+                    style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                <span id="sc-result"
+                    style="font-weight: 600; color: #d946ef; padding: 0 10px; min-width: 80px; text-align: center;">-</span>
+
+                <button onclick="calculateSmallCapYield()"
+                    style="background-color: #d946ef; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    Run
+                </button>
+            </div>
         </div>
 
         <!-- GRAPH VIEW -->
@@ -619,6 +629,34 @@
 
             try {
                 const response = await fetch(`/api/inflation_cagr?start=${start}&end=${end}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultSpan.innerText = "Error";
+                    alert(data.error);
+                } else {
+                    resultSpan.innerText = data.cagr;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultSpan.innerText = "Error";
+            }
+        }
+
+        async function calculateSmallCapYield() {
+            const start = document.getElementById('sc-start-year').value;
+            const end = document.getElementById('sc-end-year').value;
+            const resultSpan = document.getElementById('sc-result');
+
+            if (!start || !end) {
+                alert("Please enter both start and end years.");
+                return;
+            }
+
+            resultSpan.innerText = "Loading...";
+
+            try {
+                const response = await fetch(`/api/small_cap_cagr?start=${start}&end=${end}`);
                 const data = await response.json();
 
                 if (data.error) {
