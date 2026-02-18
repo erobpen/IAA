@@ -298,18 +298,22 @@
             <div class="sub-tabs-nav">
                 <button class="sub-tab-btn active" onclick="openSubTab(event, 'inf-graph-view')">Graph</button>
                 <button class="sub-tab-btn" onclick="openSubTab(event, 'inf-data-view')">Data</button>
-                {% if inf_cagr %}
-                <span
-                    style="align-self: center; margin-left: auto; font-weight: 600; color: #f97316; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155; margin-right: 10px;">
-                    Avg Annual Inflation: {{ inf_cagr }}
-                </span>
-                {% endif %}
-                {% if inf_cagr_1942 %}
-                <span
-                    style="align-self: center; font-weight: 600; color: #f97316; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155;">
-                    Since 1942: {{ inf_cagr_1942 }}
-                </span>
-                {% endif %}
+                <!-- Interactive Calculator -->
+                <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
+                    <input type="number" id="inf-start-year" placeholder="Start Year"
+                        style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                    <input type="number" id="inf-end-year" placeholder="End Year"
+                        style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                    <span id="inf-result"
+                        style="font-weight: 600; color: #f97316; padding: 0 10px; min-width: 80px; text-align: center;">-</span>
+
+                    <button onclick="calculateInflation()"
+                        style="background-color: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        Run
+                    </button>
+                </div>
             </div>
 
             <!-- GRAPH VIEW -->
@@ -576,6 +580,7 @@
             evt.currentTarget.classList.add("active");
         }
 
+
         // Level 2 Sub-Tab Switching
         function openSubTab(evt, subTabName) {
             // Find the parent container (the active main tab content)
@@ -598,6 +603,34 @@
             // Show the current sub-tab
             document.getElementById(subTabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+        }
+
+        async function calculateInflation() {
+            const start = document.getElementById('inf-start-year').value;
+            const end = document.getElementById('inf-end-year').value;
+            const resultSpan = document.getElementById('inf-result');
+
+            if (!start || !end) {
+                alert("Please enter both start and end years.");
+                return;
+            }
+
+            resultSpan.innerText = "Loading...";
+
+            try {
+                const response = await fetch(`/api/inflation_cagr?start=${start}&end=${end}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultSpan.innerText = "Error";
+                    alert(data.error);
+                } else {
+                    resultSpan.innerText = data.cagr;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultSpan.innerText = "Error";
+            }
         }
 
     </script>

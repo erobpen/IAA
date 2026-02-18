@@ -61,5 +61,22 @@ def dashboard():
                            sc_table=sc_table,
                            sc_cagr=sc_cagr)
 
+@app.route('/api/inflation_cagr')
+def get_inflation_cagr():
+    from flask import request, jsonify
+    try:
+        start_year = int(request.args.get('start'))
+        end_year = int(request.args.get('end'))
+        
+        cagr = inflation.calculate_period_cagr(start_year, end_year)
+        
+        if cagr is not None:
+             return jsonify({'cagr': f"{cagr:.2f}%", 'error': None})
+        else:
+             return jsonify({'cagr': None, 'error': 'Invalid Range or No Data'})
+             
+    except Exception as e:
+        return jsonify({'cagr': None, 'error': str(e)})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

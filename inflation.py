@@ -165,3 +165,63 @@ def analyze_inflation():
         print(f"Error in analyze_inflation: {e}")
         traceback.print_exc()
         return None, [], "Error", "Error"
+
+def calculate_period_cagr(start_year, end_year):
+    """
+    Calculates the CAGR of Inflation (CPI) between two years.
+    Returns the percentage as a float (e.g., 3.5 for 3.5%).
+    Returns None if data invalid.
+    """
+    try:
+        # Load all data
+        data = database.get_all_inflation_data()
+        
+        if data.empty:
+            return None
+            
+        # Resample to Annual
+        annual_data = data.resample('YE').last()
+        
+        # Filter by range
+        # Start Year: We take the CPI at the END of start_year (or beginning of start_year? Usually annual means end of year value)
+        # Let's assume start_year is the base.
+        # Strict filtering: Year >= start and Year <= end
+        
+        # To get growth FROM 1942 TO 2024:
+        # We need CPI at 1942 (Start) and CPI at 2024 (End).
+        
+        # Find closest available date for start_year
+        # If user says 1942, we want the value at the end of 1942 (or beginning). 
+        # Let's stick to Year End data we have.
+        
+        # Data for Start
+        # We need the value at the end of start_year.
+        try:
+            start_row = annual_data.loc[annual_data.index.year == start_year]
+            if start_row.empty:
+                 # If exact year not found, maybe just take the nearest prior? 
+                 # For now, strict.
+                 return None
+            start_cpi = start_row['CPI'].iloc[-1]
+            
+            end_row = annual_data.loc[annual_data.index.year == end_year]
+            if end_row.empty:
+                return None
+            end_cpi = end_row['CPI'].iloc[-1]
+            
+            # Years diff
+            # If start=1942, end=1943. Years = 1.
+            years = end_year - start_year
+            
+            if years <= 0:
+                return 0.0 # Or error
+                
+            cagr = (end_cpi / start_cpi) ** (1 / years) - 1
+            return cagr * 100.0
+            
+        except IndexError:
+            return None
+            
+    except Exception as e:
+        print(f"Error in calculate_period_cagr: {e}")
+        return None
