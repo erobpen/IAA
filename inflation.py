@@ -54,7 +54,7 @@ def analyze_inflation():
         
         if data.empty:
             print("Warning: No inflation data available to analyze.")
-            return None, [], "N/A"
+            return None, [], "N/A", "N/A"
             
         # 5. Analysis
         # Resample to Annual (Year End) for the table/chart as requested
@@ -84,6 +84,23 @@ def analyze_inflation():
                  inf_cagr_str = "N/A"
         else:
              inf_cagr_str = "N/A"
+        
+        # Calculate Average Annual Inflation Since 1942
+        # Filter data for Date >= 1942-01-01
+        data_1942 = annual_data[annual_data.index.year >= 1942]
+        
+        if not data_1942.empty and len(data_1942) > 1:
+            start_cpi_1942 = data_1942['CPI'].iloc[0]
+            end_cpi_1942 = data_1942['CPI'].iloc[-1]
+            years_1942 = (data_1942.index[-1] - data_1942.index[0]).days / 365.25
+            
+            if years_1942 > 0:
+                inf_cagr_1942 = (end_cpi_1942 / start_cpi_1942) ** (1 / years_1942) - 1
+                inf_cagr_1942_str = f"{inf_cagr_1942*100:.2f}%"
+            else:
+                 inf_cagr_1942_str = "N/A"
+        else:
+             inf_cagr_1942_str = "N/A"
         
         # 6. Plotting
         print("Plotting Inflation...")
@@ -126,9 +143,9 @@ def analyze_inflation():
         # Reverse to show newest first
         table_data.reverse()
         
-        return output, table_data, inf_cagr_str
+        return output, table_data, inf_cagr_str, inf_cagr_1942_str
  
     except Exception as e:
         print(f"Error in analyze_inflation: {e}")
         traceback.print_exc()
-        return None, [], "Error"
+        return None, [], "Error", "Error"

@@ -300,8 +300,14 @@
                 <button class="sub-tab-btn" onclick="openSubTab(event, 'inf-data-view')">Data</button>
                 {% if inf_cagr %}
                 <span
-                    style="align-self: center; margin-left: auto; font-weight: 600; color: #f97316; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155;">
+                    style="align-self: center; margin-left: auto; font-weight: 600; color: #f97316; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155; margin-right: 10px;">
                     Avg Annual Inflation: {{ inf_cagr }}
+                </span>
+                {% endif %}
+                {% if inf_cagr_1942 %}
+                <span
+                    style="align-self: center; font-weight: 600; color: #f97316; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155;">
+                    Since 1942: {{ inf_cagr_1942 }}
                 </span>
                 {% endif %}
             </div>

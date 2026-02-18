@@ -16,7 +16,7 @@ def dashboard():
     plot_url = base64.b64encode(img.getvalue()).decode()
     
     # Inflation Analysis
-    inf_img, inf_table, inf_cagr = inflation.analyze_inflation()
+    inf_img, inf_table, inf_cagr, inf_cagr_1942 = inflation.analyze_inflation()
     if inf_img:
         inf_plot_url = base64.b64encode(inf_img.getvalue()).decode()
     else:
@@ -51,6 +51,7 @@ def dashboard():
                            inf_plot_url=inf_plot_url,
                            inf_table=inf_table,
                            inf_cagr=inf_cagr,
+                           inf_cagr_1942=inf_cagr_1942,
 
                            div_plot_url=div_plot_url,
                            div_table=div_table,
