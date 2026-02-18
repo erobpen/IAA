@@ -8,6 +8,7 @@ import lda
 import small_cap
 import lsc
 import lscda
+import interest_rate
 
 app = Flask(__name__)
 
@@ -30,6 +31,13 @@ def dashboard():
         lscda_plot_url = base64.b64encode(lscda_img.getvalue()).decode()
     else:
         lscda_plot_url = None
+        
+    # Interest Rate Analysis
+    ir_img, ir_table = interest_rate.analyze_interest_rate()
+    if ir_img:
+        ir_plot_url = base64.b64encode(ir_img.getvalue()).decode()
+    else:
+        ir_plot_url = None
     
     # Inflation Analysis
     inf_img, inf_table, inf_cagr, inf_cagr_1942 = inflation.analyze_inflation()
@@ -68,6 +76,8 @@ def dashboard():
                            lsc_table=lsc_table,
                            lscda_plot_url=lscda_plot_url,
                            lscda_table=lscda_table,
+                           ir_plot_url=ir_plot_url,
+                           ir_table=ir_table,
                            inf_plot_url=inf_plot_url,
                            inf_table=inf_table,
                            inf_cagr=inf_cagr,
