@@ -305,6 +305,9 @@ def analyze_margin():
         # Filter where equity is not just flat 0 at start if needed, but 1928 start is fine.
         plt.plot(df.index, df['Margin_Equity'], label='3x Strategy Margin Equity ($0 Start)', color='purple', linewidth=1)
         
+        # Using symlog to handle 0 and negative values while showing exponential growth
+        plt.yscale('symlog')
+        
         # Optional: Plot Debt on secondary axis?
         # Or just show Equity
         
