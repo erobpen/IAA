@@ -6,7 +6,8 @@ import pandas as pd
 
 # Database Connection URL (matches docker-compose environment variables)
 # host='db' comes from the service name in docker-compose
-DATABASE_URL = "postgresql://user:password@db:5432/investing"
+db_host = os.getenv('DB_HOST', 'db')
+DATABASE_URL = f"postgresql://user:password@{db_host}:5432/investing"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

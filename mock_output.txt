@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "C:\Users\rober\OneDrive\Desktop\Posao\Antigravity\InvestingApp\lsc.py", line 48, in analyze_lsc
+    merged.set_index('Date', inplace=True)
+  File "C:\Users\rober\AppData\Local\Programs\Python\Python311\Lib\site-packages\pandas\core\frame.py", line 6122, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+F
+======================================================================
+FAIL: test_analyze_lsc (__main__.TestLSC.test_analyze_lsc)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\rober\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1378, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rober\OneDrive\Desktop\Posao\Antigravity\InvestingApp\test_lsc_mock.py", line 43, in test_analyze_lsc
+    self.assertIsNotNone(img)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.009s
+
+FAILED (failures=1)
+Running analyze_lsc with mocks...
+DEBUG: Calling analyzer.get_strategy_data()...
+DEBUG: daily_data returned. Empty? False
+DEBUG: Calling small_cap.get_small_cap_data()...
+DEBUG: Daily Data Shape: (10, 5)
+DEBUG: SC Data Shape: (1, 1)
+Error in analyze_lsc: "None of ['Date'] are in the columns"

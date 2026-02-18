@@ -6,6 +6,7 @@ import inflation
 import dividend_module
 import lda
 import small_cap
+import lsc
 
 app = Flask(__name__)
 
@@ -14,6 +15,13 @@ def dashboard():
     # Strategy Analysis
     img, table_data = analyze_strategy()
     plot_url = base64.b64encode(img.getvalue()).decode()
+    
+    # LSC Analysis
+    lsc_img, lsc_table = lsc.analyze_lsc()
+    if lsc_img:
+        lsc_plot_url = base64.b64encode(lsc_img.getvalue()).decode()
+    else:
+        lsc_plot_url = None
     
     # Inflation Analysis
     inf_img, inf_table, inf_cagr, inf_cagr_1942 = inflation.analyze_inflation()
@@ -48,6 +56,8 @@ def dashboard():
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
                            table_data=table_data,
+                           lsc_plot_url=lsc_plot_url,
+                           lsc_table=lsc_table,
                            inf_plot_url=inf_plot_url,
                            inf_table=inf_table,
                            inf_cagr=inf_cagr,

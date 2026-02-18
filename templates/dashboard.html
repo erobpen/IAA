@@ -227,6 +227,7 @@
             <button class="tab-btn" onclick="openTab(event, 'dividend-tab')">Dividend</button>
             <button class="tab-btn" onclick="openTab(event, 'lda-tab')">LDA</button>
             <button class="tab-btn" onclick="openTab(event, 'sc-tab')">Small Cap</button>
+            <button class="tab-btn" onclick="openTab(event, 'lsc-tab')">LSC</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -498,73 +499,144 @@
 
         </div>
 
+
+
+        <!-- SMALL CAP TAB CONTENT -->
+        <div id="sc-tab" class="tab-content">
+
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'sc-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'sc-data-view')">Data</button>
+                <!-- Interactive Calculator -->
+                <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
+                    <input type="number" id="sc-start-year" placeholder="Start Year"
+                        style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                    <input type="number" id="sc-end-year" placeholder="End Year"
+                        style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
+
+                    <span id="sc-result"
+                        style="font-weight: 600; color: #d946ef; padding: 0 10px; min-width: 80px; text-align: center;">-</span>
+
+                    <button onclick="calculateSmallCapYield()"
+                        style="background-color: #d946ef; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        Run
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="sc-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if sc_plot_url %}
+                    <img src="data:image/png;base64,{{ sc_plot_url }}" alt="Small Cap Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading Small Cap Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="sc-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Monthly Yield</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Small Cap Index</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in sc_table %}
+                            <tr>
+                                <td style="padding: 10px;">{{ row.date }}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #d946ef;">{{
+                                    row.yield }}</td>
+                                <td style="padding: 10px; text-align: right;">{{ row.index_value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- LSC TAB CONTENT -->
+        <div id="lsc-tab" class="tab-content">
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'lsc-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'lsc-data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="lsc-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if lsc_plot_url %}
+                    <img src="data:image/png;base64,{{ lsc_plot_url }}" alt="LSC Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading LSC Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="lsc-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Regime</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x (Cash-based)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x (SC-based)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                    SC Daily Yield (Est)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in lsc_table %}
+                            <tr>
+                                <td style="padding: 10px;">{{ row.date }}</td>
+                                <td class="{{ 'text-success' if row.regime == 1 else 'text-danger' }}"
+                                    style="padding: 10px; text-align: right; font-weight: bold;">
+                                    {{ "Risk On" if row.regime == 1 else "Risk Off (SC)" }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; color: #8b5cf6;">{{ row.val_cash }}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #d946ef;">{{
+                                    row.val_sc }}</td>
+                                <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.sc_daily_yield }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- SMALL CAP TAB CONTENT -->
-    <div id="sc-tab" class="tab-content">
-
-        <!-- LEVEL 2 TABS (Sub Tabs) -->
-        <div class="sub-tabs-nav">
-            <button class="sub-tab-btn active" onclick="openSubTab(event, 'sc-graph-view')">Graph</button>
-            <button class="sub-tab-btn" onclick="openSubTab(event, 'sc-data-view')">Data</button>
-            <!-- Interactive Calculator -->
-            <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
-                <input type="number" id="sc-start-year" placeholder="Start Year"
-                    style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
-
-                <input type="number" id="sc-end-year" placeholder="End Year"
-                    style="background-color: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 6px; width: 100px;">
-
-                <span id="sc-result"
-                    style="font-weight: 600; color: #d946ef; padding: 0 10px; min-width: 80px; text-align: center;">-</span>
-
-                <button onclick="calculateSmallCapYield()"
-                    style="background-color: #d946ef; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                    Run
-                </button>
-            </div>
-        </div>
-
-        <!-- GRAPH VIEW -->
-        <div id="sc-graph-view" class="sub-tab-content active">
-            <div class="chart-container">
-                {% if sc_plot_url %}
-                <img src="data:image/png;base64,{{ sc_plot_url }}" alt="Small Cap Analysis" class="main-plot">
-                {% else %}
-                <p class="placeholder-text">Loading Small Cap Data...</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- DATA VIEW -->
-        <div id="sc-data-view" class="sub-tab-content">
-            <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
-                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
-                    <thead
-                        style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <tr>
-                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
-                                Date</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Monthly Yield</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Small Cap Index</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in sc_table %}
-                        <tr>
-                            <td style="padding: 10px;">{{ row.date }}</td>
-                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #d946ef;">{{
-                                row.yield }}</td>
-                            <td style="padding: 10px; text-align: right;">{{ row.index_value }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+    </div>
     </div>
 
     <script>
