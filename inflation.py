@@ -54,7 +54,7 @@ def analyze_inflation():
         
         if data.empty:
             print("Warning: No inflation data available to analyze.")
-            return None, []
+            return None, [], "N/A"
             
         # 5. Analysis
         # Resample to Annual (Year End) for the table/chart as requested
@@ -64,10 +64,26 @@ def analyze_inflation():
         # Calculate Annual Inflation %
         annual_data['Inflation_Pct'] = annual_data['CPI'].pct_change() * 100
         
+        
         # Calculate Cumulative Inflation (Growth of $1 since start)
         # Factor = CPI_current / CPI_start
         base_cpi = annual_data['CPI'].iloc[0]
         annual_data['Cumulative_Factor'] = annual_data['CPI'] / base_cpi
+        
+        # Calculate Average Annual Inflation (CAGR of CPI)
+        # Formula: (End_CPI / Start_CPI) ^ (1 / Years) - 1
+        if not annual_data.empty:
+            start_cpi = annual_data['CPI'].iloc[0]
+            end_cpi = annual_data['CPI'].iloc[-1]
+            # Use actual time difference via years
+            years = (annual_data.index[-1] - annual_data.index[0]).days / 365.25
+            if years > 0:
+                inf_cagr = (end_cpi / start_cpi) ** (1 / years) - 1
+                inf_cagr_str = f"{inf_cagr*100:.2f}%"
+            else:
+                 inf_cagr_str = "N/A"
+        else:
+             inf_cagr_str = "N/A"
         
         # 6. Plotting
         print("Plotting Inflation...")
@@ -110,9 +126,9 @@ def analyze_inflation():
         # Reverse to show newest first
         table_data.reverse()
         
-        return output, table_data
-
+        return output, table_data, inf_cagr_str
+ 
     except Exception as e:
         print(f"Error in analyze_inflation: {e}")
         traceback.print_exc()
-        return None, []
+        return None, [], "Error"
