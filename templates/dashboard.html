@@ -228,6 +228,7 @@
             <button class="tab-btn" onclick="openTab(event, 'lda-tab')">LDA</button>
             <button class="tab-btn" onclick="openTab(event, 'sc-tab')">Small Cap</button>
             <button class="tab-btn" onclick="openTab(event, 'lsc-tab')">LSC</button>
+            <button class="tab-btn" onclick="openTab(event, 'lscda-tab')">LSCDA</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -626,6 +627,70 @@
                                     row.val_sc }}</td>
                                 <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.sc_daily_yield }}
                                 </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- LSCDA TAB CONTENT -->
+        <div id="lscda-tab" class="tab-content">
+            <!-- LEVEL 2 TABS (Sub Tabs) -->
+            <div class="sub-tabs-nav">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'lscda-graph-view')">Graph</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'lscda-data-view')">Data</button>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="lscda-graph-view" class="sub-tab-content active">
+                <div class="chart-container">
+                    {% if lscda_plot_url %}
+                    <img src="data:image/png;base64,{{ lscda_plot_url }}" alt="LSCDA Analysis" class="main-plot">
+                    {% else %}
+                    <p class="placeholder-text">Loading LSCDA Data...</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DATA VIEW -->
+            <div id="lscda-data-view" class="sub-tab-content">
+                <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                        <thead
+                            style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <tr>
+                                <th
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                    Date</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    Regime</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x (SC + Div)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x (Cash + Div)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                    Daily Div Yield (est)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in lscda_table %}
+                            <tr>
+                                <td style="padding: 10px;">{{ row.date }}</td>
+                                <td class="{{ 'text-success' if row.regime == 1 else 'text-danger' }}"
+                                    style="padding: 10px; text-align: right; font-weight: bold;">
+                                    {{ "Risk On" if row.regime == 1 else "Risk Off (SC)" }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #10b981;">{{
+                                    row.val_lscda }}</td>
+                                <td style="padding: 10px; text-align: right; color: #8b5cf6;">{{ row.val_lsc }}</td>
+                                <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.formatted_div_yield
+                                    }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

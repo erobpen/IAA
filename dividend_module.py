@@ -75,25 +75,31 @@ def download_shiller_data():
         print(f"Error downloading Shiller data: {e}")
         return False
 
-def analyze_dividend():
-    """Generates plots and table data for the Dividend tab."""
-    
+def get_dividend_data():
+    """Fetches and calculates dividend yield data."""
     # Check if we need to update data
     latest_date = get_latest_market_stats_date()
     
-    # If no data or data is old (e.g. more than 1 month), try to download
-    # For now, simple check: if no data, download.
+    # If no data or data is old, try to download
     if not latest_date:
         download_shiller_data()
         
     df = get_all_market_stats()
     
     if df.empty:
-        return None, []
+        return pd.DataFrame()
         
     # Calculate Dividend Yield: (Dividend / Price) * 100
-    # Note: Shiller's 'Dividend' is nominal dividend
     df['Dividend Yield'] = (df['Dividend'] / df['SP500']) * 100
+    return df
+
+def analyze_dividend():
+    """Generates plots and table data for the Dividend tab."""
+    
+    df = get_dividend_data()
+    
+    if df.empty:
+        return None, []
     
     # Filter for last 100 years
     last_date = df.index.max()
