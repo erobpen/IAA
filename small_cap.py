@@ -2,10 +2,13 @@
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
-import io
+import traceback
 import datetime
 import requests
 import zipfile
+import io
+import data_cache
+from plotting import save_plot_to_buffer
 
 # Use Agg backend
 matplotlib.use('Agg')
@@ -13,11 +16,13 @@ matplotlib.use('Agg')
 def get_small_cap_data():
     """
     Fetches Fama-French Small Cap Value data manually from the website.
-    Bypasses pandas_datareader and read_csv issues by manually parsing lines.
+    Uses caching to avoid redundant downloads.
     """
+    cached = data_cache.get('small_cap_data')
+    if cached is not None:
+        return cached
+
     try:
-        # URL for 6 Portfolios Formed on Size and Book-to-Market (2 x 3)
-        # CSV format
         url = "http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_2x3_CSV.zip"
         
         print(f"Downloading from {url}...")
@@ -44,7 +49,6 @@ def get_small_cap_data():
                 
         # 1. Find Header
         header_index = -1
-        # Look for header. Usually the first line with "SMALL LoBM"
         for i, line in enumerate(decoded_lines[:100]):
             if "SMALL LoBM" in line or "Small LoBM" in line:
                 header_index = i
@@ -55,7 +59,6 @@ def get_small_cap_data():
             return pd.DataFrame()
             
         # Parse Header Columns
-        # Split by comma or whitespace
         header_line = decoded_lines[header_index]
         if ',' in header_line:
             columns = [c.strip() for c in header_line.split(',')]
@@ -64,35 +67,31 @@ def get_small_cap_data():
             
         print(f"DEBUG: Columns detected: {columns}")
         
-        # 2. Iterate Data Rows
-        dates = []
-        values = []
-        
-        # We need to find which column index corresponds to Small Value
-        # Target: Small Value (SMALL HiBM)
+        # 2. Find Small Value column
         target_idx = -1
         for idx, col in enumerate(columns):
             if "SMALL HiBM" in col or "Small HiBM" in col:
                 target_idx = idx
                 break
                 
-        # Fallback if name not found but structure is standard 6 portfolios
+        # Fallback
         if target_idx == -1 and len(columns) >= 6:
-             # 0=Small Lo, 1=Small Med, 2=Small Hi
              target_idx = 2
              print("DEBUG: Using index 2 for Small Value fallback.")
         
         if target_idx == -1:
-             print("DEBUG: Could not identifying Small Value column.")
+             print("DEBUG: Could not identify Small Value column.")
              return pd.DataFrame()
 
         # Iterate rows
+        dates = []
+        values = []
+        
         for i in range(header_index + 1, len(decoded_lines)):
             line = decoded_lines[i]
             if not line:
                 continue
                 
-            # Split line
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
             else:
@@ -102,19 +101,10 @@ def get_small_cap_data():
                 continue
                 
             date_str = parts[0]
-            # Check if valid monthly date (6 digits)
             if len(date_str) == 6 and date_str.isdigit():
-                # We expect date + 6 values = 7 parts (if date column is not in header)
-                # Or date + N values.
-                
-                # Check target index
-                # If parts[0] is date, then value is at target_idx + offset
-                # If header included "Date" or "Unnamed", then target_idx matches.
-                # If header did NOT include Date, then parts has 1 extra item at start.
-                
                 val_idx = target_idx
                 if len(parts) == len(columns) + 1:
-                    val_idx = target_idx + 1 # Shift because date is extra
+                    val_idx = target_idx + 1
                     
                 if val_idx < len(parts):
                     val_str = parts[val_idx]
@@ -129,10 +119,8 @@ def get_small_cap_data():
                     dates.append(date_str)
                     values.append(val_str)
             
-            # Stop if we hit Annual block (Optional optimization)
-            # If date is 4 digits, it's annual
+            # Stop if we hit Annual block
             if len(date_str) == 4 and date_str.isdigit():
-                 # We are likely in annual block
                  pass
 
         if not dates:
@@ -150,11 +138,12 @@ def get_small_cap_data():
         df['Year'] = df.index.year
         
         print(f"DEBUG: Successfully parsed {len(df)} rows.")
+
+        data_cache.set('small_cap_data', df)
         return df
 
     except Exception as e:
         print(f"Error getting small cap data manually: {e}")
-        import traceback
         traceback.print_exc()
         return pd.DataFrame()
 
@@ -166,49 +155,40 @@ def analyze_small_cap():
         if df.empty:
             return None, [], "N/A"
             
-        # 2. Monthly Data Processing (No Annual Resampling)
-        # Calculate Index (Base 100)
+        # 2. Monthly Data Processing
         df['Growth_Index'] = (1 + df['Small_Value_Ret']).cumprod() * 100.0
         
-        # We want to show monthly data: Date, Yield (%), Index Value
+        # 3. Plotting
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.semilogy(df.index, df['Growth_Index'], label='Small Cap Value Index (Base 100)', color='#d946ef', linewidth=1.5)
         
-        # 3. Plotting (Optional based on user request "maybe if possible some index")
-        # Let's plot the Index Value (base 100) on semilog
-        plt.figure(figsize=(10, 6))
-        plt.semilogy(df.index, df['Growth_Index'], label='Small Cap Value Index (Base 100)', color='#d946ef', linewidth=1.5)
+        ax.set_title('Small Cap Value Index (1926=100)')
+        ax.set_ylabel('Index Value (Log Scale)')
+        ax.set_xlabel('Year')
+        ax.grid(True, which="both", ls="-", alpha=0.2)
+        ax.legend()
         
-        plt.title('Small Cap Value Index (1926=100)')
-        plt.ylabel('Index Value (Log Scale)')
-        plt.xlabel('Year')
-        plt.grid(True, which="both", ls="-", alpha=0.2)
-        plt.legend()
+        img = save_plot_to_buffer(fig)
         
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight')
-        img.seek(0)
-        plt.close()
-        
-        # 4. Table Data (Monthly)
-        # Sort desc by Date
-        # Since it's monthly, we have 1000+ rows. The frontend might need to handle this or just show it.
-        # Format Date as YYYY-MM
+        # 4. Table Data (vectorized)
         table_records = df.sort_index(ascending=False)
         
         table_data = []
-        for date_idx, row in table_records.iterrows():
-            ret_val = row['Small_Value_Ret']
+        dates = table_records.index.strftime('%Y-%m')
+        ret_vals = table_records['Small_Value_Ret'].values
+        idx_vals = table_records['Growth_Index'].values
+        
+        for i in range(len(table_records)):
+            ret_val = ret_vals[i]
             ret_str = f"{ret_val*100:.2f}%" if pd.notna(ret_val) else "-"
             
             table_data.append({
-                'date': date_idx.strftime('%Y-%m'),
+                'date': dates[i],
                 'yield': ret_str,
-                'index_value': f"{row['Growth_Index']:,.2f}"
+                'index_value': f"{idx_vals[i]:,.2f}"
             })
             
-        
-        # Calculate CAGR (Compound Annual Growth Rate)
-        # Formula: (End_Value / Start_Value) ^ (12 / Total_Months) - 1
-        # Start Value is 100.0
+        # Calculate CAGR
         if not df.empty:
              end_val = df['Growth_Index'].iloc[-1]
              months = len(df)
@@ -221,42 +201,21 @@ def analyze_small_cap():
 
     except Exception as e:
         print(f"Error in analyze_small_cap: {e}")
-        import traceback
         traceback.print_exc()
         return None, [], "Error"
 
 def calculate_period_cagr(start_year, end_year):
-    """
-    Calculates the CAGR of Small Cap Index between two years.
-    Returns the percentage as a float.
-    """
+    """Calculates the CAGR of Small Cap Index between two years."""
     try:
         df = get_small_cap_data()
         
         if df.empty:
             return None
             
-        # Ensure we have datetime index
-        if not isinstance(df.index, pd.DatetimeIndex):
-             # Try to convert if 'Date' column exists. 
-             # Based on previous code, Date is index.
-             pass
-             
         # Calculate Growth Index if not present
         if 'Growth_Index' not in df.columns:
             df['Growth_Index'] = (1 + df['Small_Value_Ret']).cumprod() * 100.0
             
-        # Filter by years
-        # Start: We want the value at the START of the period? 
-        # Or usually investment returns are from End of Year X to End of Year Y.
-        # Let's take End of start_year as base (or Beginning of start_year?)
-        # For annual CAGR, usually: Value at End / Value at Start.
-        # If user inputs 1930 to 1940. We want growth from 1930 (start) to 1940 (end).
-        # We need Index Value at Dec 1929 (or Jan 1930) and Dec 1940.
-        
-        # Let's try to get data for start_year and end_year.
-        # We will use the last available data point for start_year and end_year.
-        
         # Filter for start year
         start_data = df[df.index.year == start_year]
         if start_data.empty:

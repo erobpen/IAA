@@ -2,21 +2,25 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('Agg') # Set backend before importing pyplot
+matplotlib.use('Agg')  # Set backend before importing pyplot
 import matplotlib.pyplot as plt
-import os
 import io
 import traceback
 from datetime import timedelta
 import database
+import data_cache
+from plotting import save_plot_to_buffer
 
 def get_strategy_data():
     """
     Fetches data and performs all strategy calculations.
-    Returns the prepared DataFrame.
+    Returns the prepared DataFrame. Uses caching to avoid redundant work.
     """
+    cached = data_cache.get('strategy_data')
+    if cached is not None:
+        return cached
+
     print("Getting strategy data...")
-    database.init_db()
     
     ticker = "^GSPC"
     
@@ -68,7 +72,7 @@ def get_strategy_data():
     
     # Calculate daily simple returns (Price Return)
     data['Simple_Ref'] = data['Close'].pct_change()
-    data['Simple_Ref'].fillna(0, inplace=True)
+    data['Simple_Ref'] = data['Simple_Ref'].fillna(0)
     
     # Simulated Total Return (Adding Dividends) -> 0 as per user request
     daily_dividend = 0
@@ -92,6 +96,7 @@ def get_strategy_data():
     data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)
     data['Lev_3x_Growth'] = initial_capital * (1 + data['Strategy_3x_Daily']).cumprod()
     
+    data_cache.set('strategy_data', data)
     return data
 
 def analyze_strategy():
@@ -101,52 +106,51 @@ def analyze_strategy():
         if data.empty:
              raise Exception("No data available!")
              
-        # ... Rest of plotting code ...
-        
         print("Plotting results...")
-        plt.figure(figsize=(12, 6))
-        plt.plot(data.index, data['Buy_Hold_Growth'], label='Buy & Hold (1x Total Return)', linewidth=1)
-        plt.plot(data.index, data['Lev_3x_BH_Growth'], label='3x Buy & Hold', linewidth=1, color='orange')
-        plt.plot(data.index, data['Lev_3x_Growth'], label='3x Strategy (MA)', linewidth=1, color='purple')
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.plot(data.index, data['Buy_Hold_Growth'], label='Buy & Hold (1x Total Return)', linewidth=1)
+        ax.plot(data.index, data['Lev_3x_BH_Growth'], label='3x Buy & Hold', linewidth=1, color='orange')
+        ax.plot(data.index, data['Lev_3x_Growth'], label='3x Strategy (MA)', linewidth=1, color='purple')
         
-        plt.yscale('log')
-        plt.title('Leverage for the Long Run: Portfolio Value ($10k Initial)')
-        plt.xlabel('Date')
-        plt.ylabel('Portfolio Value ($)')
-        plt.legend()
-        plt.grid(True, which="both", ls="-", alpha=0.2)
+        ax.set_yscale('log')
+        ax.set_title('Leverage for the Long Run: Portfolio Value ($10k Initial)')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Portfolio Value ($)')
+        ax.legend()
+        ax.grid(True, which="both", ls="-", alpha=0.2)
         
-        output = io.BytesIO()
-        plt.savefig(output, format='png')
-        output.seek(0)
+        output = save_plot_to_buffer(fig)
         print("Analysis complete. Returning image buffer.")
-        plt.close() # Close plot to free memory
         
-        # Prepare Data for Table (Full Daily Data)
-        # User requested EVERY available data point (Daily).
-        
-        # Reset index to make Date a column for iteration
+        # Prepare Data for Table — vectorized approach
         full_data = data.reset_index()
         
-        # Format for JSON/Template
+        # Pre-compute scaled SMA
+        valid_sma = pd.notna(full_data['SMA_200']) & (full_data['Close'] != 0)
+        full_data['scaled_sma'] = np.where(
+            valid_sma,
+            full_data['Buy_Hold_Growth'] * (full_data['SMA_200'] / full_data['Close']),
+            np.nan
+        )
+        
+        # Build table data vectorized
         table_data = []
-        for _, row in full_data.iterrows():
-            # Calculate Scaled SMA (to compare with $10k scaled S&P value)
-            # Scaled_SMA = Portfolio_Value * (Raw_SMA / Raw_Price)
-            # Handle edge case where SMA might be NaN (start of data)
-            if pd.notna(row['SMA_200']) and row['Close'] != 0:
-                scaled_sma = row['Buy_Hold_Growth'] * (row['SMA_200'] / row['Close'])
-                sma_str = f"{scaled_sma:,.2f}"
-            else:
-                sma_str = "-"
-
+        dates = full_data['Date'].dt.strftime('%Y-%m-%d').values
+        sp500_vals = full_data['Buy_Hold_Growth'].values
+        sma_vals = full_data['scaled_sma'].values
+        bh_3x_vals = full_data['Lev_3x_BH_Growth'].values
+        strat_3x_vals = full_data['Lev_3x_Growth'].values
+        regime_vals = full_data['Regime'].values
+        
+        for i in range(len(full_data)):
+            sma_str = f"{sma_vals[i]:,.2f}" if not np.isnan(sma_vals[i]) else "-"
             table_data.append({
-                'date': row['Date'].strftime('%Y-%m-%d'),
-                'sp500_val': f"{row['Buy_Hold_Growth']:,.2f}",
+                'date': dates[i],
+                'sp500_val': f"{sp500_vals[i]:,.2f}",
                 'sma_val': sma_str,
-                'strategy_3x_bh_val': f"{row['Lev_3x_BH_Growth']:,.2f}",
-                'strategy_3x_val': f"{row['Lev_3x_Growth']:,.2f}",
-                'regime': int(row['Regime']) if pd.notna(row['Regime']) else 0
+                'strategy_3x_bh_val': f"{bh_3x_vals[i]:,.2f}",
+                'strategy_3x_val': f"{strat_3x_vals[i]:,.2f}",
+                'regime': int(regime_vals[i]) if not np.isnan(regime_vals[i]) else 0
             })
             
         # Reverse list to show newest first

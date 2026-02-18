@@ -3,59 +3,54 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import io
 import traceback
 import dividend_module
+from plotting import save_plot_to_buffer
 
 def analyze_interest_rate():
     try:
         # Use existing data fetcher
-        # Returns DF with columns: Date, SP500, Dividend, Earnings, CPI, Long Interest Rate, etc.
         df = dividend_module.get_dividend_data()
         
         if df.empty:
             return None, []
 
         # Focus on "Long Interest Rate"
-        # Filter for validity (drop NaN)
         df_ir = df[['Long Interest Rate']].dropna()
         
         # Sort by Date
         df_ir = df_ir.sort_index()
 
         # Calculate Estimated Margin Rate (Low Cost Broker)
-        # Assumption: Spread of 1.5% over the 10Y Treasury (Rough proxy for Fed Funds + Spread in normal times, 
-        # though Short term rates can be higher/lower. 1.5% is a conservative baseline markup).
         MARGIN_SPREAD = 1.5
         df_ir['Margin Rate'] = df_ir['Long Interest Rate'] + MARGIN_SPREAD
 
         # Generate Plot
-        plt.figure(figsize=(10, 6))
-        plt.plot(df_ir.index, df_ir['Long Interest Rate'], label='Long Interest Rate (10-Year Treasury)', color='#eab308') # Yellow/Gold
-        plt.plot(df_ir.index, df_ir['Margin Rate'], label=f'Est. Margin Rate (+{MARGIN_SPREAD}%)', color='#f43f5e', linestyle='--') # Rose/Red dashed
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(df_ir.index, df_ir['Long Interest Rate'], label='Long Interest Rate (10-Year Treasury)', color='#eab308')
+        ax.plot(df_ir.index, df_ir['Margin Rate'], label=f'Est. Margin Rate (+{MARGIN_SPREAD}%)', color='#f43f5e', linestyle='--')
         
-        plt.title('Historical Long Interest Rate vs Est. Margin Rate')
-        plt.xlabel('Year')
-        plt.ylabel('Rate (%)')
-        plt.legend()
-        plt.grid(True, alpha=0.3)
+        ax.set_title('Historical Long Interest Rate vs Est. Margin Rate')
+        ax.set_xlabel('Year')
+        ax.set_ylabel('Rate (%)')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
         
-        # Save plot
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight')
-        img.seek(0)
-        plt.close()
+        img = save_plot_to_buffer(fig)
         
-        # Prepare Table Data
-        # Sort descending by date
+        # Prepare Table Data (vectorized)
         df_ir_latest = df_ir.sort_index(ascending=False)
         
         table_data = []
-        for date, row in df_ir_latest.iterrows():
+        dates = df_ir_latest.index.strftime('%Y-%m')
+        rates = df_ir_latest['Long Interest Rate'].values
+        margin_rates = df_ir_latest['Margin Rate'].values
+        
+        for i in range(len(df_ir_latest)):
             table_data.append({
-                'date': date.strftime('%Y-%m'),
-                'rate': f"{row['Long Interest Rate']:.2f}%",
-                'margin_rate': f"{row['Margin Rate']:.2f}%"
+                'date': dates[i],
+                'rate': f"{rates[i]:.2f}%",
+                'margin_rate': f"{margin_rates[i]:.2f}%"
             })
             
         return img, table_data

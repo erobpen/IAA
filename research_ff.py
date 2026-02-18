@@ -43,13 +43,12 @@ def check_fama_french():
             except Exception as e:
                 print(f"  Error fetching {ds}: {e}")
 
+
     except Exception as e:
         print(f"General Error: {e}")
         import traceback
         traceback.print_exc()
 
-    except Exception as e:
-        print(f"General Error: {e}")
-
 if __name__ == "__main__":
     check_fama_french()
+

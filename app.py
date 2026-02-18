@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import base64
 from analyzer import analyze_strategy
 import inflation
@@ -10,72 +10,62 @@ import lsc
 import lscda
 import interest_rate
 import margin
+import database
+import data_cache
 
 app = Flask(__name__)
 
+# Initialize database once at startup
+database.init_db()
+
+
+def _encode_image(img):
+    """Encode a BytesIO image to base64 string, handling both .getvalue() and .read()."""
+    if img is None:
+        return None
+    return base64.b64encode(img.getvalue()).decode()
+
+
 @app.route('/')
 def dashboard():
+    # Clear cache at start of each request so all tabs share fresh data
+    data_cache.clear()
+
     # Strategy Analysis
     img, table_data = analyze_strategy()
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    plot_url = _encode_image(img)
     
     # LSC Analysis
     lsc_img, lsc_table = lsc.analyze_lsc()
-    if lsc_img:
-        lsc_plot_url = base64.b64encode(lsc_img.getvalue()).decode()
-    else:
-        lsc_plot_url = None
+    lsc_plot_url = _encode_image(lsc_img)
 
     # LSCDA Analysis
     lscda_img, lscda_table = lscda.analyze_lscda()
-    if lscda_img:
-        lscda_plot_url = base64.b64encode(lscda_img.getvalue()).decode()
-    else:
-        lscda_plot_url = None
+    lscda_plot_url = _encode_image(lscda_img)
         
     # Interest Rate Analysis
     ir_img, ir_table = interest_rate.analyze_interest_rate()
-    if ir_img:
-        ir_plot_url = base64.b64encode(ir_img.getvalue()).decode()
-    else:
-        ir_plot_url = None
+    ir_plot_url = _encode_image(ir_img)
     
     # Inflation Analysis
     inf_img, inf_table, inf_cagr, inf_cagr_1942 = inflation.analyze_inflation()
-    if inf_img:
-        inf_plot_url = base64.b64encode(inf_img.getvalue()).decode()
-    else:
-        inf_plot_url = None
-        
-
+    inf_plot_url = _encode_image(inf_img)
 
     # Dividend Analysis
     div_img, div_table = dividend_module.analyze_dividend()
-    if div_img:
-        div_plot_url = base64.b64encode(div_img.read()).decode()
-    else:
-        div_plot_url = None
+    div_plot_url = _encode_image(div_img)
 
     # LDA Analysis
     lda_img, lda_table = lda.analyze_lda()
-    if lda_img:
-        lda_plot_url = base64.b64encode(lda_img.read()).decode()
-    else:
-        lda_plot_url = None
+    lda_plot_url = _encode_image(lda_img)
         
     # Small Cap Analysis
     sc_img, sc_table, sc_cagr = small_cap.analyze_small_cap()
-    if sc_img:
-        sc_plot_url = base64.b64encode(sc_img.read()).decode()
-    else:
-        sc_plot_url = None
+    sc_plot_url = _encode_image(sc_img)
 
     # Margin Analysis
     margin_img, margin_table = margin.analyze_margin()
-    if margin_img:
-        margin_plot_url = base64.b64encode(margin_img.getvalue()).decode()
-    else:
-        margin_plot_url = None
+    margin_plot_url = _encode_image(margin_img)
 
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
@@ -103,7 +93,6 @@ def dashboard():
 
 @app.route('/api/inflation_cagr')
 def get_inflation_cagr():
-    from flask import request, jsonify
     try:
         start_year = int(request.args.get('start'))
         end_year = int(request.args.get('end'))
@@ -120,7 +109,6 @@ def get_inflation_cagr():
 
 @app.route('/api/small_cap_cagr')
 def get_small_cap_cagr():
-    from flask import request, jsonify
     try:
         start_year = int(request.args.get('start'))
         end_year = int(request.args.get('end'))

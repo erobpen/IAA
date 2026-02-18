@@ -1,7 +1,6 @@
 import os
-from sqlalchemy import create_engine, Column, Date, String, Float, Integer, BigInteger, inspect, select
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, Date, String, Float, Integer, BigInteger, inspect, select, text
+from sqlalchemy.orm import declarative_base, sessionmaker
 import pandas as pd
 
 # Database Connection URL (matches docker-compose environment variables)
@@ -85,15 +84,14 @@ def save_stock_data(df, ticker):
     except Exception as e:
         print(f"Error saving data: {e}")
         db.rollback()
-        db.rollback()
     finally:
         db.close()
 
 def get_all_stock_data(ticker):
     """Reads all data for a ticker from DB into a Pandas DataFrame."""
-    query = f"SELECT * FROM stock_prices WHERE ticker = '{ticker}' ORDER BY date ASC"
+    query = text("SELECT * FROM stock_prices WHERE ticker = :ticker ORDER BY date ASC")
     try:
-        df = pd.read_sql(query, engine)
+        df = pd.read_sql(query, engine, params={"ticker": ticker})
         if not df.empty:
             df['Date'] = pd.to_datetime(df['date'])
             df.set_index('Date', inplace=True)
@@ -117,14 +115,15 @@ class InflationData(Base):
 
 def get_latest_inflation_date():
     """Get the latest date we have inflation data for."""
+    session = SessionLocal()
     try:
-        session = SessionLocal()
         last_entry = session.query(InflationData).order_by(InflationData.date.desc()).first()
-        session.close()
         return last_entry.date if last_entry else None
     except Exception as e:
         print(f"Error getting latest inflation date: {e}")
         return None
+    finally:
+        session.close()
 
 def save_inflation_data(df):
     """Save inflation dataframe to DB."""
@@ -151,8 +150,8 @@ def save_inflation_data(df):
 
 def get_all_inflation_data():
     """Get all inflation data from DB as DataFrame."""
+    session = SessionLocal()
     try:
-        session = SessionLocal()
         data = session.query(InflationData).order_by(InflationData.date).all()
         
         if not data:
@@ -163,11 +162,12 @@ def get_all_inflation_data():
         df['Date'] = pd.to_datetime(df['Date'])
         df.set_index('Date', inplace=True)
         
-        session.close()
         return df
     except Exception as e:
         print(f"Error getting inflation data: {e}")
         return pd.DataFrame()
+    finally:
+        session.close()
 
 # --- Market Statistics Data Support (Shiller) ---
 
@@ -187,14 +187,15 @@ class MarketStats(Base):
 
 def get_latest_market_stats_date():
     """Get the latest date we have market stats for."""
+    session = SessionLocal()
     try:
-        session = SessionLocal()
         last_entry = session.query(MarketStats).order_by(MarketStats.date.desc()).first()
-        session.close()
         return last_entry.date if last_entry else None
     except Exception as e:
         print(f"Error getting latest market stats date: {e}")
         return None
+    finally:
+        session.close()
 
 def save_market_stats(df):
     """Save market stats dataframe to DB."""
@@ -236,8 +237,8 @@ def save_market_stats(df):
 
 def get_all_market_stats():
     """Get all market stats from DB as DataFrame."""
+    session = SessionLocal()
     try:
-        session = SessionLocal()
         data = session.query(MarketStats).order_by(MarketStats.date).all()
         
         if not data:
@@ -259,8 +260,9 @@ def get_all_market_stats():
         df['Date'] = pd.to_datetime(df['Date'])
         df.set_index('Date', inplace=True)
         
-        session.close()
         return df
     except Exception as e:
         print(f"Error getting market stats: {e}")
         return pd.DataFrame()
+    finally:
+        session.close()
