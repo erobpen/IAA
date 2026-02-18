@@ -9,6 +9,7 @@ import small_cap
 import lsc
 import lscda
 import interest_rate
+import margin
 
 app = Flask(__name__)
 
@@ -69,6 +70,13 @@ def dashboard():
     else:
         sc_plot_url = None
 
+    # Margin Analysis
+    margin_img, margin_table = margin.analyze_margin()
+    if margin_img:
+        margin_plot_url = base64.b64encode(margin_img.getvalue()).decode()
+    else:
+        margin_plot_url = None
+
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
                            table_data=table_data,
@@ -82,6 +90,8 @@ def dashboard():
                            inf_table=inf_table,
                            inf_cagr=inf_cagr,
                            inf_cagr_1942=inf_cagr_1942,
+                           margin_plot_url=margin_plot_url,
+                           margin_table=margin_table,
 
                            div_plot_url=div_plot_url,
                            div_table=div_table,

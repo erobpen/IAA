@@ -230,6 +230,7 @@
             <button class="tab-btn" onclick="openTab(event, 'lsc-tab')">LSC</button>
             <button class="tab-btn" onclick="openTab(event, 'lscda-tab')">LSCDA</button>
             <button class="tab-btn" onclick="openTab(event, 'ir-tab')">Interest Rate</button>
+            <button class="tab-btn" onclick="openTab(event, 'margin-tab')">Margin</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -747,6 +748,71 @@
                             <td style="padding: 10px; text-align: right; color: #eab308; font-weight: bold;">{{ row.rate
                                 }}</td>
                             <td style="padding: 10px; text-align: right; color: #f43f5e;">{{ row.margin_rate }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MARGIN TAB CONTENT -->
+    <div id="margin-tab" class="tab-content">
+        <!-- LEVEL 2 TABS (Sub Tabs) -->
+        <div class="sub-tabs-nav">
+            <button class="sub-tab-btn active" onclick="openSubTab(event, 'margin-graph-view')">Graph</button>
+            <button class="sub-tab-btn" onclick="openSubTab(event, 'margin-data-view')">Data</button>
+        </div>
+
+        <!-- GRAPH VIEW -->
+        <div id="margin-graph-view" class="sub-tab-content active">
+            <div class="chart-container">
+                {% if margin_plot_url %}
+                <img src="data:image/png;base64,{{ margin_plot_url }}" alt="Margin Strategy Analysis" class="main-plot">
+                {% else %}
+                <p class="placeholder-text">Loading Margin Strategy Data...</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- DATA VIEW -->
+        <div id="margin-data-view" class="sub-tab-content">
+            <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead
+                        style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                Date</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Cash</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Invested Value</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Margin Debt</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Equity (NLV)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                3x Signals</th>
+                            <th
+                                style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
+                                Rate (10Y)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in margin_table %}
+                        <tr>
+                            <td style="padding: 10px;">{{ row.date }}</td>
+                            <td style="padding: 10px; text-align: right; color: #10b981;">{{ row.cash }}</td>
+                            <td style="padding: 10px; text-align: right; color: #3b82f6;">{{ row.invested }}</td>
+                            <td style="padding: 10px; text-align: right; color: #f43f5e;">{{ row.debt }}</td>
+                            <td style="padding: 10px; text-align: right; color: #a855f7; font-weight: bold;">{{
+                                row.equity }}</td>
+                            <td class="{{ 'text-success' if row.regime == 1 else 'text-danger' }}"
+                                style="padding: 10px; text-align: right; font-weight: bold;">
+                                {{ "Invested" if row.regime == 1 else "Cash" }}
+                            </td>
+                            <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.rate }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
