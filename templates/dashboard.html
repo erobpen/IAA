@@ -491,6 +491,11 @@
         <div class="sub-tabs-nav">
             <button class="sub-tab-btn active" onclick="openSubTab(event, 'sc-graph-view')">Graph</button>
             <button class="sub-tab-btn" onclick="openSubTab(event, 'sc-data-view')">Data</button>
+            {% if sc_cagr %}
+            <span style="align-self: center; margin-left: auto; font-weight: 600; color: #d946ef; background-color: #1e293b; padding: 8px 16px; border-radius: 6px; border: 1px solid #334155;">
+                Avg Yearly Yield: {{ sc_cagr }}
+            </span>
+            {% endif %}
         </div>
 
         <!-- GRAPH VIEW -->

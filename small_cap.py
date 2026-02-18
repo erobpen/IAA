@@ -164,7 +164,7 @@ def analyze_small_cap():
         df = get_small_cap_data()
         
         if df.empty:
-            return None, []
+            return None, [], "N/A"
             
         # 2. Monthly Data Processing (No Annual Resampling)
         # Calculate Index (Base 100)
@@ -205,13 +205,25 @@ def analyze_small_cap():
                 'index_value': f"{row['Growth_Index']:,.2f}"
             })
             
-        return img, table_data
+        
+        # Calculate CAGR (Compound Annual Growth Rate)
+        # Formula: (End_Value / Start_Value) ^ (12 / Total_Months) - 1
+        # Start Value is 100.0
+        if not df.empty:
+             end_val = df['Growth_Index'].iloc[-1]
+             months = len(df)
+             cagr = (end_val / 100.0) ** (12 / months) - 1
+             cagr_str = f"{cagr*100:.2f}%"
+        else:
+             cagr_str = "N/A"
+
+        return img, table_data, cagr_str
 
     except Exception as e:
         print(f"Error in analyze_small_cap: {e}")
         import traceback
         traceback.print_exc()
-        return None, []
+        return None, [], "Error"
 
 if __name__ == "__main__":
     analyze_small_cap()

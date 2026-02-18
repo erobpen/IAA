@@ -39,7 +39,7 @@ def dashboard():
         lda_plot_url = None
         
     # Small Cap Analysis
-    sc_img, sc_table = small_cap.analyze_small_cap()
+    sc_img, sc_table, sc_cagr = small_cap.analyze_small_cap()
     if sc_img:
         sc_plot_url = base64.b64encode(sc_img.read()).decode()
     else:
@@ -56,7 +56,8 @@ def dashboard():
                            lda_plot_url=lda_plot_url,
                            lda_table=lda_table,
                            sc_plot_url=sc_plot_url,
-                           sc_table=sc_table)
+                           sc_table=sc_table,
+                           sc_cagr=sc_cagr)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
