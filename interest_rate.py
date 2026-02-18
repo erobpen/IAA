@@ -23,11 +23,18 @@ def analyze_interest_rate():
         # Sort by Date
         df_ir = df_ir.sort_index()
 
+        # Calculate Estimated Margin Rate (Low Cost Broker)
+        # Assumption: Spread of 1.5% over the 10Y Treasury (Rough proxy for Fed Funds + Spread in normal times, 
+        # though Short term rates can be higher/lower. 1.5% is a conservative baseline markup).
+        MARGIN_SPREAD = 1.5
+        df_ir['Margin Rate'] = df_ir['Long Interest Rate'] + MARGIN_SPREAD
+
         # Generate Plot
         plt.figure(figsize=(10, 6))
         plt.plot(df_ir.index, df_ir['Long Interest Rate'], label='Long Interest Rate (10-Year Treasury)', color='#eab308') # Yellow/Gold
+        plt.plot(df_ir.index, df_ir['Margin Rate'], label=f'Est. Margin Rate (+{MARGIN_SPREAD}%)', color='#f43f5e', linestyle='--') # Rose/Red dashed
         
-        plt.title('Historical Long Interest Rate (Annual %)')
+        plt.title('Historical Long Interest Rate vs Est. Margin Rate')
         plt.xlabel('Year')
         plt.ylabel('Rate (%)')
         plt.legend()
@@ -47,7 +54,8 @@ def analyze_interest_rate():
         for date, row in df_ir_latest.iterrows():
             table_data.append({
                 'date': date.strftime('%Y-%m'),
-                'rate': f"{row['Long Interest Rate']:.2f}%"
+                'rate': f"{row['Long Interest Rate']:.2f}%",
+                'margin_rate': f"{row['Margin Rate']:.2f}%"
             })
             
         return img, table_data

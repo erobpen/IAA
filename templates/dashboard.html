@@ -736,6 +736,8 @@
                                 Date</th>
                             <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
                                 Interest Rate (10Y)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                Est. Margin Rate (+1.5%)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -744,6 +746,7 @@
                             <td style="padding: 10px;">{{ row.date }}</td>
                             <td style="padding: 10px; text-align: right; color: #eab308; font-weight: bold;">{{ row.rate
                                 }}</td>
+                            <td style="padding: 10px; text-align: right; color: #f43f5e;">{{ row.margin_rate }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
