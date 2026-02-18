@@ -21,6 +21,9 @@ class TestLSC(unittest.TestCase):
         daily_df['Total_Return_Daily'] = 0.01
         daily_df['Strategy_3x_Daily'] = np.where(daily_df['Regime'] == 1, 0.03, 0.0)
         daily_df['Lev_3x_Growth'] = (1 + daily_df['Strategy_3x_Daily']).cumprod() * 10000
+        # Fed Funds Rate financing cost (required by lsc.py cost model)
+        daily_df['Fed_Funds_Rate'] = 5.0  # 5% annual (mock value)
+        daily_df['Financing_Rate_Daily'] = 2 * (5.0 / 100) / 252  # 2x borrowed portion
         
         mock_analyzer.get_strategy_data.return_value = daily_df
         

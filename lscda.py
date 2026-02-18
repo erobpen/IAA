@@ -62,18 +62,24 @@ def analyze_lscda():
         merged['Div_Daily_Yield'] = merged['Dividend Yield'] / 100 / 252
         
         # 7. Calculate LSCDA Strategy
-        # ETF Expense Ratio: 3x leveraged ETFs (e.g., SPXL) charge ~1% annual.
-        # Applied only when holding the leveraged ETF (Regime=1).
-        # Index ETF fee (~0.06%) is disregarded.
+        # 3x leveraged ETF cost model with dividends:
+        #   3×price + 1×div − 2×financing − expense
+        # Leveraged ETFs earn ~1x dividend (NOT 3x) because:
+        # - Swaps don't pay dividends (only the physical stock portion earns them)
+        # - Financing costs (Fed Funds Rate on 2x borrowed portion) eat most dividends
+        # - The ~1% expense ratio further reduces the effective dividend
+        # Net result: SPXL yields LESS than SPY (~0.3-0.8% vs ~1.2%)
         ETF_EXPENSE_RATIO_DAILY = 0.01 / 252  # 1% annual -> daily
         
-        merged['Total_Return_Daily_with_Div'] = merged['Simple_Ref'] + merged['Div_Daily_Yield']
+        # 3x Lev with Div — full cost model
+        merged['Lev_3x_Div_Daily'] = (
+            3 * merged['Simple_Ref']           # 3x price return
+            + merged['Div_Daily_Yield']         # 1x dividend (not 3x)
+            - merged['Financing_Rate_Daily']    # 2x financing cost (from analyzer/FRED)
+            - ETF_EXPENSE_RATIO_DAILY           # 1% annual expense ratio
+        ).clip(lower=-1.0)
         
-        # 3x Lev with Div — includes ETF expense ratio deduction
-        # A 3x leveraged ETF holds 3x the shares, so it earns 3x price return AND 3x dividends.
-        merged['Lev_3x_Div_Daily'] = (3 * merged['Total_Return_Daily_with_Div'] - ETF_EXPENSE_RATIO_DAILY).clip(lower=-1.0)
-        
-        # Strategy Mixing
+        # Strategy Mixing: 3x ETF when Regime=1, Small Cap + Div when Regime=0
         merged['SC_Div_Daily'] = merged['SC_Daily_Ret'] + merged['Div_Daily_Yield']
         
         merged['LSCDA_Daily_Ret'] = np.where(merged['Regime'] == 1, 

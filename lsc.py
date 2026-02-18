@@ -60,11 +60,15 @@ def analyze_lsc():
         merged['SC_Daily_Ret'] = (1 + merged['Small_Value_Ret']) ** (1 / merged['TradingDays']) - 1
         
         # 5. Calculate LSC Strategy
-        # ETF Expense Ratio: 3x leveraged ETFs (e.g., SPXL) charge ~1% annual.
-        # Applied only when holding the leveraged ETF (Regime=1), not during Small Cap (Regime=0).
-        # Index ETF fee (~0.06%) is disregarded.
+        # 3x leveraged ETF cost model: 3×price − 2×financing − expense
+        # financing_rate and expense_ratio apply only when holding the 3x ETF (Regime=1).
+        # Financing_Rate_Daily comes from analyzer (Fed Funds Rate from FRED).
         ETF_EXPENSE_RATIO_DAILY = 0.01 / 252  # 1% annual -> daily
-        lev_ret = (merged['Total_Return_Daily'] * 3 - ETF_EXPENSE_RATIO_DAILY).clip(lower=-1.0)
+        lev_ret = (
+            merged['Total_Return_Daily'] * 3
+            - merged['Financing_Rate_Daily']
+            - ETF_EXPENSE_RATIO_DAILY
+        ).clip(lower=-1.0)
         
         merged['LSC_Daily_Ret'] = np.where(merged['Regime'] == 1, lev_ret, merged['SC_Daily_Ret'])
         

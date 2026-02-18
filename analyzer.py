@@ -6,15 +6,70 @@ matplotlib.use('Agg')  # Set backend before importing pyplot
 import matplotlib.pyplot as plt
 import io
 import traceback
-from datetime import timedelta
+from datetime import timedelta, datetime
+import pandas_datareader.data as web
 import database
 import data_cache
 from plotting import save_plot_to_buffer
+
+def _fetch_fed_funds_rate():
+    """
+    Fetches the Daily Effective Federal Funds Rate (DFF) from FRED.
+    Stores in DB for caching. Returns DataFrame with Date index and 'Rate' column.
+    
+    This rate represents the cost of leverage financing for 3x leveraged ETFs.
+    Leveraged ETFs use total return swaps; the swap counterparty charges a
+    financing rate tied to short-term rates (SOFR/Fed Funds).
+    DFF data starts from 1954-07-01.
+    """
+    cached = data_cache.get('fed_funds_data')
+    if cached is not None:
+        return cached
+    
+    # Check DB for latest data
+    last_date = database.get_latest_fed_funds_date()
+    current_date = datetime.now()
+    
+    start_date = None
+    if last_date:
+        days_diff = (current_date.date() - last_date).days
+        if days_diff > 5:
+            start_date = last_date + timedelta(days=1)
+            print(f"Updating Fed Funds Rate data from {start_date}...")
+        else:
+            print("Fed Funds Rate data is up to date.")
+    else:
+        print("No Fed Funds Rate data. Fetching full history...")
+        start_date = datetime(1954, 7, 1)
+    
+    if start_date:
+        try:
+            new_data = web.DataReader('DFF', 'fred', start_date, current_date)
+            if not new_data.empty:
+                print(f"Downloaded {len(new_data)} Fed Funds Rate records.")
+                database.save_fed_funds_data(new_data)
+        except Exception as e:
+            print(f"Error fetching DFF from FRED: {e}")
+    
+    ff_data = database.get_all_fed_funds_data()
+    data_cache.set('fed_funds_data', ff_data)
+    return ff_data
 
 def get_strategy_data():
     """
     Fetches data and performs all strategy calculations.
     Returns the prepared DataFrame. Uses caching to avoid redundant work.
+    
+    3x leveraged ETF daily return model:
+        3x_ETF_return = 3 × price_return − 2 × financing_rate − expense_ratio
+        
+    Where:
+    - price_return: daily S&P 500 price change
+    - financing_rate: Fed Funds Rate (DFF from FRED) — cost of swap-based leverage
+    - expense_ratio: ~1% annual for 3x ETFs like SPXL (index ETF ~0.06% disregarded)
+    
+    The financing rate is included in the DataFrame as 'Financing_Rate_Daily' so
+    downstream modules (lsc, lscda) can access it for their own 3x calculations.
     """
     cached = data_cache.get('strategy_data')
     if cached is not None:
@@ -78,28 +133,55 @@ def get_strategy_data():
     daily_dividend = 0
     data['Total_Return_Daily'] = data['Simple_Ref'] + daily_dividend
     
+    # --- Financing Cost (Cost of Carry) ---
+    # Fetch Fed Funds Rate (DFF) from FRED — represents the cost of swap-based leverage.
+    # For pre-1954 data (before DFF series exists), assume 1% rate as approximation.
+    # A 3x leveraged ETF borrows 2x its capital via swaps, paying this rate on the 2x portion.
+    PRE_1954_RATE_ASSUMPTION = 1.0  # 1% annual — Fed Funds was very low in 1930s-1950s
+    
+    ff_data = _fetch_fed_funds_rate()
+    
+    if not ff_data.empty:
+        # Reindex to daily trading dates, forward-fill to cover weekends/holidays
+        ff_reindexed = ff_data['Rate'].reindex(data.index, method='ffill')
+        # Back-fill any NaN at the start (dates before first DFF record)
+        ff_reindexed = ff_reindexed.fillna(PRE_1954_RATE_ASSUMPTION)
+        data['Fed_Funds_Rate'] = ff_reindexed
+    else:
+        # If no data available, use assumption
+        data['Fed_Funds_Rate'] = PRE_1954_RATE_ASSUMPTION
+    
+    # Convert annual rate (%) to daily cost for the 2x borrowed portion
+    # financing_cost_daily = 2 × (annual_rate / 100) / 252
+    data['Financing_Rate_Daily'] = 2 * (data['Fed_Funds_Rate'] / 100) / 252
+    
+    # --- ETF Expense Ratio ---
+    # 3x leveraged ETFs (e.g., SPXL) charge ~1% annual expense ratio.
+    # Index ETFs (e.g., SPY/VOO) have ~0.06% fee which is disregarded.
+    ETF_EXPENSE_RATIO_ANNUAL = 0.01  # 1% annual
+    ETF_EXPENSE_RATIO_DAILY = ETF_EXPENSE_RATIO_ANNUAL / 252
+    
     # Initial Capital
     initial_capital = 10000
-    
-    # ETF Expense Ratio for 3x leveraged ETFs (e.g., SPXL ~1% annual).
-    # Index ETFs (e.g., SPY/VOO) have ~0.06% fee which is disregarded.
-    # The 1% fee is converted to a daily deduction and subtracted from 3x returns.
-    ETF_EXPENSE_RATIO_ANNUAL = 0.01  # 1% annual
-    ETF_EXPENSE_RATIO_DAILY = ETF_EXPENSE_RATIO_ANNUAL / 252  # ~0.00397% per trading day
     
     # 1. Buy & Hold (1x) — no expense ratio (index ETF fee negligible)
     data['Strategy_1x_Daily'] = data['Total_Return_Daily']
     data['Buy_Hold_Growth'] = initial_capital * (1 + data['Strategy_1x_Daily']).cumprod()
     
-    # 2. 3x Buy & Hold — includes 1% annual ETF expense ratio
-    data['Strategy_3x_BH_Daily'] = 3 * data['Total_Return_Daily'] - ETF_EXPENSE_RATIO_DAILY
+    # 2. 3x Buy & Hold — full cost model:
+    #    3 × price_return − 2 × financing_rate − expense_ratio
+    data['Strategy_3x_BH_Daily'] = (
+        3 * data['Total_Return_Daily']
+        - data['Financing_Rate_Daily']
+        - ETF_EXPENSE_RATIO_DAILY
+    )
     data['Strategy_3x_BH_Daily'] = data['Strategy_3x_BH_Daily'].clip(lower=-1.0)
     data['Lev_3x_BH_Growth'] = initial_capital * (1 + data['Strategy_3x_BH_Daily']).cumprod()
     
-    # 3. 3x Strategy (MA Filter) — expense ratio only when holding the ETF (Regime=1)
+    # 3. 3x Strategy (MA Filter) — costs only when holding the ETF (Regime=1)
     data['Strategy_3x_Daily'] = np.where(
         data['Regime'] == 1,
-        3 * data['Total_Return_Daily'] - ETF_EXPENSE_RATIO_DAILY,
+        3 * data['Total_Return_Daily'] - data['Financing_Rate_Daily'] - ETF_EXPENSE_RATIO_DAILY,
         0
     )
     data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)

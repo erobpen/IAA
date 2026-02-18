@@ -68,10 +68,15 @@ def analyze_lda():
         for i in range(len(merged)):
             # Buy & Hold (1x index): earns 1x dividend. Index ETF fee (~0.06%) disregarded.
             curr_bh = curr_bh * (1 + bh_changes[i] + div_yields[i])
-            # 3x Leveraged ETF (e.g., SPXL): earns 3x dividend because it holds 3x the shares.
-            # The 1% annual ETF expense ratio is already embedded in lev_changes
-            # (comes from analyzer's Lev_3x_Growth which deducts expense daily).
-            curr_lev = curr_lev * (1 + lev_changes[i] + 3 * div_yields[i])
+            # 3x Leveraged ETF (e.g., SPXL): earns ~1x dividend, NOT 3x.
+            # Reason: Leveraged ETFs use swaps for the extra 2x exposure.
+            # Swaps do not pay dividends — the financing cost (Fed Funds Rate)
+            # on the 2x borrowed portion largely offsets any dividend advantage.
+            # The 1% expense ratio further reduces the effective dividend.
+            # Net result: SPXL yields LESS than SPY (~0.3-0.8% vs ~1.2%).
+            # The financing cost and expense ratio are already embedded in lev_changes
+            # (comes from analyzer's Lev_3x_Growth which deducts both daily).
+            curr_lev = curr_lev * (1 + lev_changes[i] + div_yields[i])
             bh_vals[i] = curr_bh
             lev_vals[i] = curr_lev
             

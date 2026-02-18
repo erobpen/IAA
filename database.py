@@ -266,3 +266,70 @@ def get_all_market_stats():
         return pd.DataFrame()
     finally:
         session.close()
+
+# --- Fed Funds Rate Data Support (FRED: DFF) ---
+# Used to calculate the financing cost (cost of carry) for 3x leveraged ETFs.
+# Leveraged ETFs use swaps to achieve 3x exposure; the swap counterparty charges
+# a financing rate tied to short-term rates (SOFR/Fed Funds).
+# The daily cost of leverage = 2 × (fed_funds_rate / 252) for the 2x borrowed portion.
+
+class FedFundsRate(Base):
+    __tablename__ = 'fed_funds_rate'
+    
+    date = Column(Date, primary_key=True)
+    rate = Column(Float)  # Daily effective rate (annualized %)
+
+def get_latest_fed_funds_date():
+    """Get the latest date we have Fed Funds Rate data for."""
+    session = SessionLocal()
+    try:
+        last_entry = session.query(FedFundsRate).order_by(FedFundsRate.date.desc()).first()
+        return last_entry.date if last_entry else None
+    except Exception as e:
+        print(f"Error getting latest fed funds date: {e}")
+        return None
+    finally:
+        session.close()
+
+def save_fed_funds_data(df):
+    """Save Fed Funds Rate dataframe to DB.
+    Expects DataFrame with DateTime index and 'DFF' column (from FRED)."""
+    session = SessionLocal()
+    try:
+        for date, row in df.iterrows():
+            exists = session.query(FedFundsRate).filter_by(date=date.date()).first()
+            if not exists:
+                val = row.iloc[0] if pd.notna(row.iloc[0]) else None
+                if val is not None:
+                    record = FedFundsRate(date=date.date(), rate=float(val))
+                    session.add(record)
+        
+        session.commit()
+        print(f"Fed Funds Rate data saved successfully.")
+    except Exception as e:
+        session.rollback()
+        print(f"Error saving fed funds data: {e}")
+    finally:
+        session.close()
+
+def get_all_fed_funds_data():
+    """Get all Fed Funds Rate data from DB as DataFrame.
+    Returns DataFrame with Date index and 'Rate' column (annualized %)."""
+    session = SessionLocal()
+    try:
+        data = session.query(FedFundsRate).order_by(FedFundsRate.date).all()
+        
+        if not data:
+            return pd.DataFrame()
+            
+        df = pd.DataFrame([{'Date': d.date, 'Rate': d.rate} for d in data])
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        
+        return df
+    except Exception as e:
+        print(f"Error getting fed funds data: {e}")
+        return pd.DataFrame()
+    finally:
+        session.close()
+
