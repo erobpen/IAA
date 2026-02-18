@@ -409,7 +409,10 @@
                                     Dividend</th>
                                 <th
                                     style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Yield</th>
+                                    3x (SC + Div)</th>
+                                <th
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
+                                    3x (Cash + Div)</th>
                                 <th
                                     style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
                                     PE Ratio</th>
@@ -688,7 +691,8 @@
                                 </td>
                                 <td style="padding: 10px; text-align: right; font-weight: bold; color: #10b981;">{{
                                     row.val_lscda }}</td>
-                                <td style="padding: 10px; text-align: right; color: #8b5cf6;">{{ row.val_lsc }}</td>
+                                <td style="padding: 10px; text-align: right; color: #8b5cf6;">{{ row.val_cash_div }}
+                                </td>
                                 <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.formatted_div_yield
                                     }}</td>
                             </tr>
