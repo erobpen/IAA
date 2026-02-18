@@ -103,15 +103,31 @@ def analyze_inflation():
              inf_cagr_1942_str = "N/A"
         
         # 6. Plotting
+        # 6. Plotting
         print("Plotting Inflation...")
-        plt.figure(figsize=(12, 6))
-        plt.plot(annual_data.index, annual_data['Cumulative_Factor'], label='Cumulative Inflation (1928 Base)', linewidth=2, color='red')
+        fig, ax1 = plt.subplots(figsize=(12, 6))
         
-        plt.title('Cumulative Inflation (Purchasing Power Decay Reverse)')
-        plt.xlabel('Year')
-        plt.ylabel('Growth of Price Level ($1 in 1928 becomes $X)')
-        plt.grid(True, which="both", ls="-", alpha=0.2)
-        plt.legend()
+        # Primary Axis (Cumulative)
+        color = 'tab:red'
+        ax1.set_xlabel('Year')
+        ax1.set_ylabel('Cumulative Inflation (Factor)', color=color)
+        line1 = ax1.plot(annual_data.index, annual_data['Cumulative_Factor'], label='Cumulative Inflation', linewidth=2, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.grid(True, which="both", ls="-", alpha=0.2)
+        
+        # Secondary Axis (Annual)
+        ax2 = ax1.twinx()
+        color = 'tab:blue'
+        ax2.set_ylabel('Annual Inflation (%)', color=color)
+        line2 = ax2.plot(annual_data.index, annual_data['Inflation_Pct'], label='Annual Inflation', linewidth=1, linestyle='--', color=color, alpha=0.6)
+        ax2.tick_params(axis='y', labelcolor=color)
+        
+        # Combine legends
+        lines = line1 + line2
+        labels = [l.get_label() for l in lines]
+        ax1.legend(lines, labels, loc='upper left')
+        
+        plt.title('Inflation Analysis: Cumulative vs Annual')
         
         output = io.BytesIO()
         plt.savefig(output, format='png')
