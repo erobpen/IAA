@@ -56,14 +56,22 @@ def analyze_lscda():
         merged['SC_Daily_Ret'] = (1 + merged['Small_Value_Ret']) ** (1 / merged['TradingDays']) - 1
         
         # 6. Calculate Daily Dividend Yield
+        # Convert annual yield (%) to daily: simple division by 252 trading days.
+        # This is consistent with how price returns (Simple_Ref) are simple daily returns.
         merged['Dividend Yield'] = merged['Dividend Yield'].fillna(0)
-        merged['Div_Daily_Yield'] = (1 + merged['Dividend Yield'] / 100) ** (1 / 252) - 1
+        merged['Div_Daily_Yield'] = merged['Dividend Yield'] / 100 / 252
         
         # 7. Calculate LSCDA Strategy
+        # ETF Expense Ratio: 3x leveraged ETFs (e.g., SPXL) charge ~1% annual.
+        # Applied only when holding the leveraged ETF (Regime=1).
+        # Index ETF fee (~0.06%) is disregarded.
+        ETF_EXPENSE_RATIO_DAILY = 0.01 / 252  # 1% annual -> daily
+        
         merged['Total_Return_Daily_with_Div'] = merged['Simple_Ref'] + merged['Div_Daily_Yield']
         
-        # 3x Lev with Div
-        merged['Lev_3x_Div_Daily'] = (3 * merged['Total_Return_Daily_with_Div']).clip(lower=-1.0)
+        # 3x Lev with Div — includes ETF expense ratio deduction
+        # A 3x leveraged ETF holds 3x the shares, so it earns 3x price return AND 3x dividends.
+        merged['Lev_3x_Div_Daily'] = (3 * merged['Total_Return_Daily_with_Div'] - ETF_EXPENSE_RATIO_DAILY).clip(lower=-1.0)
         
         # Strategy Mixing
         merged['SC_Div_Daily'] = merged['SC_Daily_Ret'] + merged['Div_Daily_Yield']

@@ -81,18 +81,27 @@ def get_strategy_data():
     # Initial Capital
     initial_capital = 10000
     
-    # 1. Buy & Hold (1x)
+    # ETF Expense Ratio for 3x leveraged ETFs (e.g., SPXL ~1% annual).
+    # Index ETFs (e.g., SPY/VOO) have ~0.06% fee which is disregarded.
+    # The 1% fee is converted to a daily deduction and subtracted from 3x returns.
+    ETF_EXPENSE_RATIO_ANNUAL = 0.01  # 1% annual
+    ETF_EXPENSE_RATIO_DAILY = ETF_EXPENSE_RATIO_ANNUAL / 252  # ~0.00397% per trading day
+    
+    # 1. Buy & Hold (1x) — no expense ratio (index ETF fee negligible)
     data['Strategy_1x_Daily'] = data['Total_Return_Daily']
     data['Buy_Hold_Growth'] = initial_capital * (1 + data['Strategy_1x_Daily']).cumprod()
     
-    # 2. 3x Buy & Hold
-    data['Strategy_3x_BH_Daily'] = 3 * data['Total_Return_Daily']
-    # Constraint
+    # 2. 3x Buy & Hold — includes 1% annual ETF expense ratio
+    data['Strategy_3x_BH_Daily'] = 3 * data['Total_Return_Daily'] - ETF_EXPENSE_RATIO_DAILY
     data['Strategy_3x_BH_Daily'] = data['Strategy_3x_BH_Daily'].clip(lower=-1.0)
     data['Lev_3x_BH_Growth'] = initial_capital * (1 + data['Strategy_3x_BH_Daily']).cumprod()
     
-    # 3. 3x Strategy (MA Filter)
-    data['Strategy_3x_Daily'] = np.where(data['Regime'] == 1, 3 * data['Total_Return_Daily'], 0)
+    # 3. 3x Strategy (MA Filter) — expense ratio only when holding the ETF (Regime=1)
+    data['Strategy_3x_Daily'] = np.where(
+        data['Regime'] == 1,
+        3 * data['Total_Return_Daily'] - ETF_EXPENSE_RATIO_DAILY,
+        0
+    )
     data['Strategy_3x_Daily'] = data['Strategy_3x_Daily'].clip(lower=-1.0)
     data['Lev_3x_Growth'] = initial_capital * (1 + data['Strategy_3x_Daily']).cumprod()
     

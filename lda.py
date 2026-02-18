@@ -66,8 +66,12 @@ def analyze_lda():
         curr_lev = initial_capital
         
         for i in range(len(merged)):
+            # Buy & Hold (1x index): earns 1x dividend. Index ETF fee (~0.06%) disregarded.
             curr_bh = curr_bh * (1 + bh_changes[i] + div_yields[i])
-            curr_lev = curr_lev * (1 + lev_changes[i] + div_yields[i])
+            # 3x Leveraged ETF (e.g., SPXL): earns 3x dividend because it holds 3x the shares.
+            # The 1% annual ETF expense ratio is already embedded in lev_changes
+            # (comes from analyzer's Lev_3x_Growth which deducts expense daily).
+            curr_lev = curr_lev * (1 + lev_changes[i] + 3 * div_yields[i])
             bh_vals[i] = curr_bh
             lev_vals[i] = curr_lev
             
