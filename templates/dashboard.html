@@ -317,30 +317,14 @@
                                 <th
                                     style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                     Date</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    S&P 500 ($10k)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    SMA 200 ($10k)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    <span class="tooltip-wrap">3x Buy & Hold ($10k)
-                                        <span class="tooltip-box">
-                                            <div class="tt-title">Daily Return Formula</div>
-                                            <code>3×price − 2×financing − expense</code>
-                                            <div class="tt-term"><b>3 × price_return</b> — 3x daily S&P 500 change</div>
-                                            <div class="tt-term"><b>2 × (FedFunds/100/252)</b> — financing cost on the
-                                                2x borrowed portion (swap rate)</div>
-                                            <div class="tt-term"><b>0.01 / 252</b> — ETF expense ratio (1% annual)</div>
-                                            <div style="margin-top: 8px;">
-                                                <code>Growth = $10k × cumprod(1 + daily)</code></div>
-                                        </span>
-                                    </span>
-                                </th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x Strategy ($10k)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="sp500_10k">S&P 500 ($10k)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="sma_200">SMA 200 ($10k)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="3x_bh">3x Buy &amp; Hold ($10k)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="3x_strategy">3x Strategy ($10k)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -408,18 +392,14 @@
                         <thead
                             style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <tr>
-                                <th
-                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
-                                    Year</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Inflation (Annual %)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Cumulative Factor</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Purchasing Power ($10k)</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="inf_year">Year</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="inflation_pct">Inflation (Annual %)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="cumulative_factor">Cumulative Factor</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="purchasing_power">Purchasing Power ($10k)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -473,21 +453,14 @@
                                 <th
                                     style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                     Date</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    S&P 500</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Dividend</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (SC + Div)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (Cash + Div)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                    PE Ratio</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="div_sp500">S&P 500</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="div_dividend">Dividend</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="div_yield">Dividend Yield</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                    data-tooltip="pe_ratio">PE Ratio (CAPE)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -535,24 +508,18 @@
                         <thead
                             style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <tr>
-                                <th
-                                    style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
-                                    Year</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Total S&P 500</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Total 3x Strategy</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Div. Yield</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                    Price S&P 500</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                    Price 3x</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lda_year">Year</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="total_sp500">Total S&P 500</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="total_3x">Total 3x Strategy</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lda_div_yield">Div. Yield</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                    data-tooltip="price_sp500">Price S&P 500</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                    data-tooltip="price_3x">Price 3x</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -623,12 +590,10 @@
                                 <th
                                     style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                     Date</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Monthly Yield</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Small Cap Index</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="sc_monthly_yield">Monthly Yield</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="sc_index">Small Cap Index</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -675,18 +640,14 @@
                                 <th
                                     style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                     Date</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Regime</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (Cash-based)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (SC-based)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                    SC Daily Yield (Est)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lsc_regime">Regime</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lsc_cash">3x (Cash-based)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lsc_sc">3x (SC-based)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                    data-tooltip="sc_daily_yield">SC Daily Yield (Est)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -739,18 +700,14 @@
                                 <th
                                     style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                     Date</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    Regime</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (SC + Div)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x (Cash + Div)</th>
-                                <th
-                                    style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                    Daily Div Yield (est)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lscda_regime">Regime</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lscda_sc_div">3x (SC + Div)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                    data-tooltip="lscda_cash_div">3x (Cash + Div)</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                    data-tooltip="daily_div_yield">Daily Div Yield (est)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -805,10 +762,10 @@
                         <tr>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                 Date</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Interest Rate (10Y)</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Est. Margin Rate (+1.5%)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="ir_10y">Interest Rate (10Y)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="ir_margin_rate">Est. Margin Rate (+1.5%)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -854,19 +811,18 @@
                         <tr>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
                                 Date</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Cash</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Invested Value</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Margin Debt</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                Equity (NLV)</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                3x Signals</th>
-                            <th
-                                style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;">
-                                Rate (10Y)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="margin_cash">Cash</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="margin_invested">Invested Value</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="margin_debt">Margin Debt</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="margin_equity">Equity (NLV)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="margin_signals">3x Signals</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                data-tooltip="margin_rate">Rate (10Y)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -999,6 +955,8 @@
         }
 
     </script>
+
+    <script src="/static/tooltips.js"></script>
 
 </body>
 
