@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import base64
-from analyzer import analyze_strategy
+from analyzer import analyze_strategy, analyze_strategy_filtered
 import inflation
 
 import dividend_module
@@ -122,6 +122,22 @@ def get_small_cap_cagr():
              
     except Exception as e:
         return jsonify({'cagr': None, 'error': str(e)})
+
+@app.route('/api/leverage/filter')
+def get_leverage_filtered():
+    try:
+        start = request.args.get('start', '')
+        end = request.args.get('end', '')
+        
+        img = analyze_strategy_filtered(start, end)
+        
+        if img is not None:
+            plot_b64 = base64.b64encode(img.getvalue()).decode()
+            return jsonify({'plot': plot_b64, 'error': None})
+        else:
+            return jsonify({'plot': None, 'error': 'No data for the selected range'})
+    except Exception as e:
+        return jsonify({'plot': None, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

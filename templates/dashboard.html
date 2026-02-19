@@ -181,6 +181,106 @@
             text-align: center;
         }
 
+        /* --- Date Range Filter --- */
+        .date-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .filter-input {
+            width: 90px;
+            padding: 6px 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        }
+
+        .filter-run-btn {
+            padding: 6px 20px;
+            background: linear-gradient(135deg, var(--accent-color), #7c3aed);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .filter-run-btn:hover {
+            opacity: 0.9;
+        }
+
+        .filter-run-btn:active {
+            transform: scale(0.97);
+        }
+
+        .filter-run-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .filter-reset-btn {
+            padding: 6px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-reset-btn:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .filter-status {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-status.error {
+            color: #ef4444;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -315,7 +415,23 @@
             <!-- GRAPH VIEW -->
             <div id="graph-view" class="sub-tab-content active">
                 <div class="chart-container">
-                    <img src="data:image/png;base64,{{ plot_url }}" alt="Strategy Comparison" class="main-plot">
+                    <img id="leverage-plot" src="data:image/png;base64,{{ plot_url }}" alt="Strategy Comparison"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ plot_url }}">
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="date-filter-bar">
+                    <div class="filter-group">
+                        <label for="lev-start">Start Year</label>
+                        <input type="number" id="lev-start" min="1928" max="2026" value="1928" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="lev-end">End Year</label>
+                        <input type="number" id="lev-end" min="1928" max="2026" value="2026" class="filter-input">
+                    </div>
+                    <button class="filter-run-btn" onclick="runLeverageFilter()">Run</button>
+                    <button class="filter-reset-btn" onclick="resetLeverageFilter()">Reset</button>
+                    <span id="lev-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -964,6 +1080,57 @@
                 console.error('Error:', error);
                 resultSpan.innerText = "Error";
             }
+        }
+
+        // --- Leverage Date Range Filter ---
+        async function runLeverageFilter() {
+            const startYear = document.getElementById('lev-start').value;
+            const endYear = document.getElementById('lev-end').value;
+            const status = document.getElementById('lev-filter-status');
+            const img = document.getElementById('leverage-plot');
+            const runBtn = document.querySelector('.date-filter-bar .filter-run-btn');
+
+            if (!startYear || !endYear) {
+                status.textContent = 'Enter both years';
+                status.className = 'filter-status error';
+                return;
+            }
+
+            const startDate = `${startYear}-01-01`;
+            const endDate = `${endYear}-12-31`;
+
+            status.textContent = 'Loading...';
+            status.className = 'filter-status';
+            runBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/leverage/filter?start=${startDate}&end=${endDate}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    status.textContent = data.error;
+                    status.className = 'filter-status error';
+                } else {
+                    img.src = 'data:image/png;base64,' + data.plot;
+                    status.textContent = `${startYear}–${endYear}`;
+                    status.className = 'filter-status';
+                }
+            } catch (error) {
+                console.error('Filter error:', error);
+                status.textContent = 'Request failed';
+                status.className = 'filter-status error';
+            } finally {
+                runBtn.disabled = false;
+            }
+        }
+
+        function resetLeverageFilter() {
+            const img = document.getElementById('leverage-plot');
+            const status = document.getElementById('lev-filter-status');
+            img.src = img.getAttribute('data-original-src');
+            status.textContent = '';
+            document.getElementById('lev-start').value = '1928';
+            document.getElementById('lev-end').value = '2026';
         }
 
     </script>

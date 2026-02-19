@@ -255,3 +255,55 @@ def analyze_strategy():
 
 if __name__ == "__main__":
     analyze_strategy()
+
+
+def analyze_strategy_filtered(start_date, end_date):
+    """
+    Re-run the leverage strategy simulation for a specific date range.
+    Uses the same daily return series but re-compounds from $10k
+    starting at start_date through end_date.
+    
+    Returns a BytesIO plot image.
+    """
+    data = get_strategy_data()
+    if data.empty:
+        return None
+
+    # Slice to requested date range
+    mask = (data.index >= pd.Timestamp(start_date)) & (data.index <= pd.Timestamp(end_date))
+    window = data.loc[mask].copy()
+
+    if window.empty or len(window) < 2:
+        return None
+
+    initial_capital = 10000
+
+    # Re-compound from $10k over just this window
+    window['BH_Filtered'] = initial_capital * (1 + window['Strategy_1x_Daily']).cumprod()
+    window['BH_3x_Filtered'] = initial_capital * (1 + window['Strategy_3x_BH_Daily']).cumprod()
+    window['Strat_3x_Filtered'] = initial_capital * (1 + window['Strategy_3x_Daily']).cumprod()
+
+    # Recalculate SMA in portfolio space
+    window['SMA_200_Filtered'] = np.where(
+        pd.notna(window['SMA_200']) & (window['Close'] != 0),
+        window['BH_Filtered'] * (window['SMA_200'] / window['Close']),
+        np.nan
+    )
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(window.index, window['BH_Filtered'], label='Buy & Hold (1x)', linewidth=1)
+    ax.plot(window.index, window['BH_3x_Filtered'], label='3x Buy & Hold', linewidth=1, color='orange')
+    ax.plot(window.index, window['Strat_3x_Filtered'], label='3x Strategy (MA)', linewidth=1, color='purple')
+
+    ax.set_yscale('log')
+    start_yr = window.index[0].strftime('%Y')
+    end_yr = window.index[-1].strftime('%Y')
+    ax.set_title(f'Leverage for the Long Run: {start_yr}–{end_yr} ($10k Initial)')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Portfolio Value ($)')
+    ax.legend()
+    ax.grid(True, which="both", ls="-", alpha=0.2)
+
+    return save_plot_to_buffer(fig)
+
