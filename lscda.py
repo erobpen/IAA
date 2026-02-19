@@ -128,7 +128,6 @@ def analyze_lscda():
                 'date': dates[i],
                 'regime': regime,
                 'val_lscda': f"{lscda_vals[i]:,.2f}",
-                'val_lsc': f"{cash_div_vals[i]:,.2f}",
                 'val_cash_div': f"{cash_div_vals[i]:,.2f}",
                 'formatted_div_yield': div_str
             })
