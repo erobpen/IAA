@@ -21,7 +21,6 @@ def analyze_lsc():
         sc_data = small_cap.get_small_cap_data()
         
         if sc_data.empty:
-            print("Warning: No Small Cap data found.")
             return None, []
 
         # 3. Preparation for Merge
@@ -77,7 +76,6 @@ def analyze_lsc():
         merged['LSC_Growth'] = initial_capital * (1 + merged['LSC_Daily_Ret']).cumprod()
         
         # 7. Plotting
-        print("Plotting LSC results...")
         fig, ax = plt.subplots(figsize=(12, 6))
         
         ax.plot(merged.index, merged['Lev_3x_Growth'], label='3x Strategy (Cash)', linewidth=1, color='purple', alpha=0.7)

@@ -18,7 +18,6 @@ SHILLER_DATA_URL = "http://www.econ.yale.edu/~shiller/data/ie_data.xls"
 def download_shiller_data():
     """Downloads and parses Shiller's data, saves to DB."""
     try:
-        print(f"Downloading Shiller data from {SHILLER_DATA_URL}...")
         response = requests.get(SHILLER_DATA_URL)
         response.raise_for_status()
         

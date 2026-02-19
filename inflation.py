@@ -11,7 +11,6 @@ from plotting import save_plot_to_buffer
 
 def analyze_inflation():
     try:
-        print("Initializing Inflation analysis...")
         
         # 1. Check what we have in DB
         last_date = database.get_latest_inflation_date()
@@ -24,11 +23,7 @@ def analyze_inflation():
             days_diff = (current_date.date() - last_date).days
             if days_diff > 35:
                 start_date = last_date + datetime.timedelta(days=1)
-                print(f"Updating Inflation data from {start_date}...")
-            else:
-                print("Inflation data is up to date.")
         else:
-            print("No Inflation data. Fetching full history...")
             start_date = datetime.datetime(1928, 1, 1)
             
         # 3. Fetch from FRED if needed
@@ -36,10 +31,7 @@ def analyze_inflation():
             try:
                 new_data = web.DataReader('CPIAUCNS', 'fred', start_date, current_date)
                 if not new_data.empty:
-                    print(f"Downloaded {len(new_data)} new inflation records.")
                     database.save_inflation_data(new_data)
-                else:
-                    print("No new inflation data found on FRED.")
             except Exception as e:
                 print(f"Error fetching from FRED: {e}")
 
@@ -47,7 +39,6 @@ def analyze_inflation():
         data = database.get_all_inflation_data()
         
         if data.empty:
-            print("Warning: No inflation data available to analyze.")
             return None, [], "N/A", "N/A"
             
         # 5. Analysis
@@ -90,7 +81,6 @@ def analyze_inflation():
              inf_cagr_1942_str = "N/A"
         
         # 6. Plotting
-        print("Plotting Inflation...")
         fig, ax1 = plt.subplots(figsize=(12, 6))
         
         # Primary Axis (Cumulative)

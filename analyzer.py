@@ -35,18 +35,13 @@ def _fetch_fed_funds_rate():
         days_diff = (current_date.date() - last_date).days
         if days_diff > 5:
             start_date = last_date + timedelta(days=1)
-            print(f"Updating Fed Funds Rate data from {start_date}...")
-        else:
-            print("Fed Funds Rate data is up to date.")
     else:
-        print("No Fed Funds Rate data. Fetching full history...")
         start_date = datetime(1954, 7, 1)
     
     if start_date:
         try:
             new_data = web.DataReader('DFF', 'fred', start_date, current_date)
             if not new_data.empty:
-                print(f"Downloaded {len(new_data)} Fed Funds Rate records.")
                 database.save_fed_funds_data(new_data)
         except Exception as e:
             print(f"Error fetching DFF from FRED: {e}")
@@ -75,7 +70,6 @@ def get_strategy_data():
     if cached is not None:
         return cached
 
-    print("Getting strategy data...")
     
     ticker = "^GSPC"
     
@@ -197,7 +191,6 @@ def analyze_strategy():
         if data.empty:
              raise Exception("No data available!")
              
-        print("Plotting results...")
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(data.index, data['Buy_Hold_Growth'], label='Buy & Hold (1x Total Return)', linewidth=1)
         ax.plot(data.index, data['Lev_3x_BH_Growth'], label='3x Buy & Hold', linewidth=1, color='orange')
@@ -211,7 +204,6 @@ def analyze_strategy():
         ax.grid(True, which="both", ls="-", alpha=0.2)
         
         output = save_plot_to_buffer(fig)
-        print("Analysis complete. Returning image buffer.")
         
         # Prepare Data for Table — vectorized approach
         full_data = data.reset_index()

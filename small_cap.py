@@ -25,7 +25,6 @@ def get_small_cap_data():
     try:
         url = "http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_2x3_CSV.zip"
         
-        print(f"Downloading from {url}...")
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
@@ -34,7 +33,6 @@ def get_small_cap_data():
             
         z = zipfile.ZipFile(io.BytesIO(r.content))
         filename = z.namelist()[0]
-        print(f"Extracting {filename}...")
         
         with z.open(filename) as f:
              lines = f.readlines()
@@ -55,7 +53,6 @@ def get_small_cap_data():
                 break
         
         if header_index == -1:
-            print("DEBUG: Header not found.")
             return pd.DataFrame()
             
         # Parse Header Columns
@@ -65,7 +62,6 @@ def get_small_cap_data():
         else:
             columns = header_line.split()
             
-        print(f"DEBUG: Columns detected: {columns}")
         
         # 2. Find Small Value column
         target_idx = -1
@@ -77,10 +73,8 @@ def get_small_cap_data():
         # Fallback
         if target_idx == -1 and len(columns) >= 6:
              target_idx = 2
-             print("DEBUG: Using index 2 for Small Value fallback.")
         
         if target_idx == -1:
-             print("DEBUG: Could not identify Small Value column.")
              return pd.DataFrame()
 
         # Iterate rows
@@ -113,18 +107,15 @@ def get_small_cap_data():
                     if dates:
                         last_date = dates[-1]
                         if date_str <= last_date:
-                            print(f"DEBUG: Date reset detected ({last_date} -> {date_str}). Stopping.")
                             break
 
                     dates.append(date_str)
                     values.append(val_str)
             
-            # Stop if we hit Annual block
             if len(date_str) == 4 and date_str.isdigit():
                  pass
 
         if not dates:
-            print("DEBUG: No data rows parsing.")
             return pd.DataFrame()
             
         df = pd.DataFrame({'Date': dates, 'Small_Value_Ret': values})
@@ -137,7 +128,6 @@ def get_small_cap_data():
         # Add Year
         df['Year'] = df.index.year
         
-        print(f"DEBUG: Successfully parsed {len(df)} rows.")
 
         data_cache.set('small_cap_data', df)
         return df
