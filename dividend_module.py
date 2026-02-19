@@ -27,7 +27,11 @@ def download_shiller_data():
         df = pd.read_excel(io.BytesIO(response.content), sheet_name="Data", header=7)
         
         # Keep relevant columns
-        df = df.iloc[:, [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]]
+        # Shiller Excel columns (after header=7): 
+        #   [0]Date [1]P [2]D [3]E [4]CPI [5]Fraction [6]Rate GS10 
+        #   [7]Real Price [8]Real Dividend [9]Real TR Price [10]Real Earnings
+        #   [11]Real TR Earnings [12]CAPE
+        df = df.iloc[:, [0, 1, 2, 3, 4, 6, 7, 8, 10, 12]]
         df.columns = ['Date', 'SP500', 'Dividend', 'Earnings', 'CPI', 'Long Interest Rate', 'Real Price', 'Real Dividend', 'Real Earnings', 'PE10']
         
         # Drop rows where Date is NaN
@@ -108,12 +112,23 @@ def analyze_dividend():
     # --- Generate Plot ---
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.plot(df_filtered.index, df_filtered['Dividend Yield'], label='S&P 500 Dividend Yield (%)', color='green')
-    
-    ax.set_title('S&P 500 Dividend Yield (Last 100 Years)')
     ax.set_xlabel('Year')
-    ax.set_ylabel('Yield (%)')
-    ax.legend()
+    ax.set_ylabel('Yield (%)', color='green')
+    ax.tick_params(axis='y', labelcolor='green')
     ax.grid(True, alpha=0.3)
+    
+    # Secondary y-axis for CAPE
+    ax2 = ax.twinx()
+    ax2.plot(df_filtered.index, df_filtered['PE10'], label='PE Ratio (CAPE)', color='#e67e22', alpha=0.7)
+    ax2.set_ylabel('PE Ratio (CAPE)', color='#e67e22')
+    ax2.tick_params(axis='y', labelcolor='#e67e22')
+    
+    ax.set_title('S&P 500 Dividend Yield & CAPE (Last 100 Years)')
+    
+    # Combined legend
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
     
     img = save_plot_to_buffer(fig)
     
