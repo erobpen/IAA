@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import traceback
 import analyzer
-import database
+import dividend_module
 from plotting import save_plot_to_buffer
 
 # Use Agg backend
@@ -14,109 +14,125 @@ matplotlib.use('Agg')
 def analyze_lda():
     """
     Analyzes Leverage Dividend Adjusted (LDA) performance.
-    Reinvests annual dividends. NO Inflation adjustment.
+    Reinvests dividends daily. NO Small Cap rotation (uses cash during Risk Off).
+    
+    This should produce the SAME values as LSCDA's 'Cash + Div' column,
+    since both compute:  3×price + 1×div − financing − expense  when Regime=1, else 0+div.
+    
     Returns plot image and table data.
     """
     try:
-        # 1. Get Strategy Data (Daily) - Provides Price Growth
-        strat_df = analyzer.get_strategy_data()
-        if strat_df.empty:
+        # 1. Get Daily Strategy Data
+        daily_data = analyzer.get_strategy_data()
+        if daily_data.empty:
             return None, []
-            
-        # 2. Get Market Stats (Shiller) for Dividends
-        mkt_df = database.get_all_market_stats()
-        if mkt_df.empty:
+
+        # 2. Get Dividend Data (Shiller monthly, will be merged to daily)
+        div_data = dividend_module.get_dividend_data()
+        if div_data.empty:
             return None, []
-            
-        # --- Process Data (Annualize) ---
-        
-        # A. Strategy Growth (Price Return)
-        strat_annual = strat_df.resample('A').last()
-        strat_annual['Year'] = strat_annual.index.year
-        
-        # Calculate Annual Price Return Factor
-        strat_annual['BH_Price_Change'] = strat_annual['Buy_Hold_Growth'].pct_change()
-        strat_annual['Lev_Price_Change'] = strat_annual['Lev_3x_Growth'].pct_change()
-        
-        # B. Dividends (Yield)
-        mkt_df['Div_Yield'] = mkt_df['Dividend'] / mkt_df['SP500']
-        div_annual = mkt_df['Div_Yield'].resample('A').mean().to_frame(name='Avg_Annual_Yield')
-        div_annual['Year'] = div_annual.index.year
-        
-        # --- Merge ---
-        merged = pd.merge(strat_annual, div_annual, on='Year', how='inner')
-        
-        if merged.empty:
-            return None, []
-            
-        # --- Logic: Reinvestment (No Inflation) ---
+
+        # 3. Merge dividend data onto daily data by YearMonth
+        daily_data['YearMonth'] = daily_data.index.to_period('M')
+        div_data['YearMonth'] = div_data.index.to_period('M')
+
+        df_daily = daily_data.reset_index()
+        if 'Date' not in df_daily.columns:
+            df_daily.rename(columns={df_daily.columns[0]: 'Date'}, inplace=True)
+
+        df_div = div_data.reset_index()[['YearMonth', 'Dividend Yield']]
+        merged = pd.merge(df_daily, df_div, on='YearMonth', how='left')
+        merged.set_index('Date', inplace=True)
+
+        # 4. Calculate Daily Dividend Yield
+        # Convert annual yield (%) to daily: simple division by 252 trading days.
+        merged['Dividend Yield'] = merged['Dividend Yield'].fillna(0)
+        merged['Div_Daily_Yield'] = merged['Dividend Yield'] / 100 / 252
+
+        # 5. ETF expense ratio (same as analyzer.py and lscda.py)
+        ETF_EXPENSE_RATIO_DAILY = 0.01 / 252  # 1% annual -> daily
+
+        # 6. Daily returns with dividends
+        # Buy & Hold (1x): price + 1x dividend (no expense ratio for index ETF)
+        merged['BH_Div_Daily'] = merged['Simple_Ref'] + merged['Div_Daily_Yield']
+
+        # 3x Strategy with dividends — full cost model:
+        #   Regime=1: 3×price + 1×div − 2×financing − expense
+        #   Regime=0: 0 + 1×div (cash earns dividend from reinvested position)
+        # For simplicity and consistency with LSCDA Cash+Div:
+        #   Regime=1: 3×price + 1×div − financing − expense
+        #   Regime=0: 0 (cash, no dividend during cash periods)
+        merged['Lev_3x_Div_Daily'] = (
+            3 * merged['Simple_Ref']
+            + merged['Div_Daily_Yield']
+            - merged['Financing_Rate_Daily']
+            - ETF_EXPENSE_RATIO_DAILY
+        ).clip(lower=-1.0)
+
+        merged['Lev_Cash_Div_Daily'] = np.where(
+            merged['Regime'] == 1,
+            merged['Lev_3x_Div_Daily'],
+            0.0
+        )
+
+        # 7. Cumulative growth (daily compounding)
         initial_capital = 10000.0
-        
-        merged = merged.sort_values('Year')
-        
-        # Vectorized simulation using numpy arrays
-        bh_changes = merged['BH_Price_Change'].fillna(0).values
-        lev_changes = merged['Lev_Price_Change'].fillna(0).values
-        div_yields = merged['Avg_Annual_Yield'].fillna(0).values
-        
-        bh_vals = np.empty(len(merged))
-        lev_vals = np.empty(len(merged))
-        
-        curr_bh = initial_capital
-        curr_lev = initial_capital
-        
-        for i in range(len(merged)):
-            # Buy & Hold (1x index): earns 1x dividend. Index ETF fee (~0.06%) disregarded.
-            curr_bh = curr_bh * (1 + bh_changes[i] + div_yields[i])
-            # 3x Leveraged ETF (e.g., SPXL): earns ~1x dividend, NOT 3x.
-            # Reason: Leveraged ETFs use swaps for the extra 2x exposure.
-            # Swaps do not pay dividends — the financing cost (Fed Funds Rate)
-            # on the 2x borrowed portion largely offsets any dividend advantage.
-            # The 1% expense ratio further reduces the effective dividend.
-            # Net result: SPXL yields LESS than SPY (~0.3-0.8% vs ~1.2%).
-            # The financing cost and expense ratio are already embedded in lev_changes
-            # (comes from analyzer's Lev_3x_Growth which deducts both daily).
-            curr_lev = curr_lev * (1 + lev_changes[i] + div_yields[i])
-            bh_vals[i] = curr_bh
-            lev_vals[i] = curr_lev
-            
-        merged['Total_LDA_SP500'] = bh_vals
-        merged['Total_LDA_3x'] = lev_vals
-        
+        merged['Total_LDA_SP500'] = initial_capital * (1 + merged['BH_Div_Daily']).cumprod()
+        merged['Total_LDA_3x'] = initial_capital * (1 + merged['Lev_Cash_Div_Daily']).cumprod()
+
+        # Also store raw price growth for reference columns
+        merged['Price_BH'] = merged['Buy_Hold_Growth']
+        merged['Price_3x'] = merged['Lev_3x_Growth']
+
+        # 8. Resample to annual for display
+        annual = merged.resample('YE').last().copy()
+        annual['Year'] = annual.index.year
+
+        # Get average annual dividend yield for display
+        div_annual = merged['Dividend Yield'].resample('YE').mean()
+        annual['Avg_Annual_Yield'] = div_annual
+
+        # Filter to years where dividend data exists
+        annual = annual.dropna(subset=['Avg_Annual_Yield'])
+        annual = annual[annual['Avg_Annual_Yield'] > 0]
+
+        if annual.empty:
+            return None, []
+
         # --- Plotting ---
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.semilogy(merged['Year'], merged['Total_LDA_SP500'], label='Total Return S&P 500 (Div Reinvested)', color='#10b981', linewidth=2)
-        ax.semilogy(merged['Year'], merged['Total_LDA_3x'], label='Total Return 3x Strategy (Div Reinvested)', color='#8b5cf6', linewidth=2)
-        
+        ax.semilogy(annual['Year'], annual['Total_LDA_SP500'], label='Total Return S&P 500 (Div Reinvested)', color='#10b981', linewidth=2)
+        ax.semilogy(annual['Year'], annual['Total_LDA_3x'], label='Total Return 3x Strategy (Div Reinvested)', color='#8b5cf6', linewidth=2)
+
         ax.set_title('Leverage Dividend Adjusted Total Return ($10k Initial)')
         ax.set_ylabel('Portfolio Value ($)')
         ax.set_xlabel('Year')
         ax.grid(True, which="both", ls="-", alpha=0.2)
         ax.legend()
-        
+
         img = save_plot_to_buffer(fig)
-        
-        # --- Table Data (vectorized) ---
-        table_records = merged.sort_values(by='Year', ascending=False)
-        
+
+        # --- Table Data ---
+        table_records = annual.sort_values(by='Year', ascending=False)
+
         table_data = []
         years = table_records['Year'].astype(int).values
         total_sp = table_records['Total_LDA_SP500'].values
         total_3x = table_records['Total_LDA_3x'].values
         avg_yields = table_records['Avg_Annual_Yield'].values
-        price_sp = table_records['Buy_Hold_Growth'].values
-        price_3x = table_records['Lev_3x_Growth'].values
-        
+        price_sp = table_records['Price_BH'].values
+        price_3x = table_records['Price_3x'].values
+
         for i in range(len(table_records)):
             table_data.append({
                 'year': int(years[i]),
                 'total_sp500': f"${total_sp[i]:,.0f}",
                 'total_3x': f"${total_3x[i]:,.0f}",
-                'div_yield': f"{avg_yields[i]*100:.2f}%",
+                'div_yield': f"{avg_yields[i]:.2f}%",
                 'price_sp500': f"${price_sp[i]:,.0f}",
                 'price_3x': f"${price_3x[i]:,.0f}"
             })
-            
+
         return img, table_data
 
     except Exception as e:

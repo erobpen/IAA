@@ -132,11 +132,14 @@ const TOOLTIPS = {
     },
     total_3x: {
         title: "3x MA Strategy + Dividends",
-        formula: "prev × (1 + lev_change + div_yield)",
+        formulas: [
+            "Risk On: 3×price + 1×div − financing − expense",
+            "Risk Off: 0% (cash, no dividend)"
+        ],
         terms: [
+            "Daily compounding, displayed as year-end snapshot",
             "3x leveraged ETF earns ~1× dividend (not 3×)",
-            "Swap-based leverage doesn't pay dividends on borrowed portion",
-            "Financing cost + expense ratio already embedded in lev_change"
+            "Same values as LSCDA 'Cash + Div' column"
         ]
     },
     lda_div_yield: {
@@ -232,11 +235,12 @@ const TOOLTIPS = {
         ]
     },
     lscda_cash_div: {
-        title: "3x Strategy + Cash + Dividends",
+        title: "3x Strategy + Cash (Div when invested)",
         formula: "$10k × cumprod(1 + daily)",
         terms: [
             "<b>Risk On</b> → 3× leveraged + daily dividend",
-            "<b>Risk Off</b> → cash (0%) + daily dividend"
+            "<b>Risk Off</b> → cash (0%, no dividend)",
+            "Same values as LDA 'Total 3x Strategy' column"
         ]
     },
     daily_div_yield: {
