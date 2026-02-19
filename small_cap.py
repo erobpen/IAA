@@ -242,3 +242,34 @@ def calculate_period_cagr(start_year, end_year):
 
 if __name__ == "__main__":
     analyze_small_cap()
+
+
+def analyze_small_cap_filtered(start_date, end_date):
+    """Re-plot Small Cap Value for a custom date range, re-indexing from 100."""
+    try:
+        df = get_small_cap_data()
+        if df.empty:
+            return None
+
+        mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
+        window = df.loc[mask].copy()
+        if window.empty or len(window) < 2:
+            return None
+
+        window['Growth_Index'] = (1 + window['Small_Value_Ret']).cumprod() * 100.0
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.semilogy(window.index, window['Growth_Index'], label='Small Cap Value Index (Base 100)', color='#d946ef', linewidth=1.5)
+
+        start_yr = window.index[0].strftime('%Y')
+        end_yr = window.index[-1].strftime('%Y')
+        ax.set_title(f'Small Cap Value Index: {start_yr}–{end_yr} (Base=100)')
+        ax.set_ylabel('Index Value (Log Scale)')
+        ax.set_xlabel('Year')
+        ax.grid(True, which="both", ls="-", alpha=0.2)
+        ax.legend()
+
+        return save_plot_to_buffer(fig)
+    except Exception as e:
+        print(f"Error in analyze_small_cap_filtered: {e}")
+        return None

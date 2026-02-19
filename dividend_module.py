@@ -153,3 +153,41 @@ def analyze_dividend():
         })
         
     return img, table_data
+
+
+def analyze_dividend_filtered(start_date, end_date):
+    """Re-plot dividend yield & CAPE for a custom date range."""
+    try:
+        df = get_dividend_data()
+        if df.empty:
+            return None
+
+        mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
+        window = df.loc[mask]
+        if window.empty or len(window) < 2:
+            return None
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(window.index, window['Dividend Yield'], label='S&P 500 Dividend Yield (%)', color='green')
+        ax.set_xlabel('Year')
+        ax.set_ylabel('Yield (%)', color='green')
+        ax.tick_params(axis='y', labelcolor='green')
+        ax.grid(True, alpha=0.3)
+
+        ax2 = ax.twinx()
+        ax2.plot(window.index, window['PE10'], label='PE Ratio (CAPE)', color='#e67e22', alpha=0.7)
+        ax2.set_ylabel('PE Ratio (CAPE)', color='#e67e22')
+        ax2.tick_params(axis='y', labelcolor='#e67e22')
+
+        start_yr = window.index[0].strftime('%Y')
+        end_yr = window.index[-1].strftime('%Y')
+        ax.set_title(f'S&P 500 Dividend Yield & CAPE ({start_yr}–{end_yr})')
+
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+
+        return save_plot_to_buffer(fig)
+    except Exception as e:
+        print(f"Error in analyze_dividend_filtered: {e}")
+        return None

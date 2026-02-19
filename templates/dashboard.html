@@ -421,16 +421,12 @@
 
                 <!-- Date Range Filter -->
                 <div class="date-filter-bar">
-                    <div class="filter-group">
-                        <label for="lev-start">Start Year</label>
-                        <input type="number" id="lev-start" min="1928" max="2026" value="1928" class="filter-input">
-                    </div>
-                    <div class="filter-group">
-                        <label for="lev-end">End Year</label>
-                        <input type="number" id="lev-end" min="1928" max="2026" value="2026" class="filter-input">
-                    </div>
-                    <button class="filter-run-btn" onclick="runLeverageFilter()">Run</button>
-                    <button class="filter-reset-btn" onclick="resetLeverageFilter()">Reset</button>
+                    <div class="filter-group"><label for="lev-filter-start">Start Year</label><input type="number"
+                            id="lev-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                    <div class="filter-group"><label for="lev-filter-end">End Year</label><input type="number"
+                            id="lev-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('lev')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('lev')">Reset</button>
                     <span id="lev-filter-status" class="filter-status"></span>
                 </div>
             </div>
@@ -506,10 +502,20 @@
             <div id="inf-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if inf_plot_url %}
-                    <img src="data:image/png;base64,{{ inf_plot_url }}" alt="Inflation Analysis" class="main-plot">
+                    <img id="inf-plot" src="data:image/png;base64,{{ inf_plot_url }}" alt="Inflation Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ inf_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading Inflation Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="inf-filter-start">Start Year</label><input type="number"
+                            id="inf-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                    <div class="filter-group"><label for="inf-filter-end">End Year</label><input type="number"
+                            id="inf-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('inf')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('inf')">Reset</button>
+                    <span id="inf-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -564,10 +570,20 @@
             <div id="div-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if div_plot_url %}
-                    <img src="data:image/png;base64,{{ div_plot_url }}" alt="Dividend Analysis" class="main-plot">
+                    <img id="div-plot" src="data:image/png;base64,{{ div_plot_url }}" alt="Dividend Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ div_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading Dividend Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="div-filter-start">Start Year</label><input type="number"
+                            id="div-filter-start" min="1870" max="2026" value="1920" class="filter-input"></div>
+                    <div class="filter-group"><label for="div-filter-end">End Year</label><input type="number"
+                            id="div-filter-end" min="1870" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('div')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('div')">Reset</button>
+                    <span id="div-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -622,10 +638,20 @@
             <div id="lda-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if lda_plot_url %}
-                    <img src="data:image/png;base64,{{ lda_plot_url }}" alt="LDA Analysis" class="main-plot">
+                    <img id="lda-plot" src="data:image/png;base64,{{ lda_plot_url }}" alt="LDA Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ lda_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading LDA Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="lda-filter-start">Start Year</label><input type="number"
+                            id="lda-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                    <div class="filter-group"><label for="lda-filter-end">End Year</label><input type="number"
+                            id="lda-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('lda')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('lda')">Reset</button>
+                    <span id="lda-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -701,10 +727,20 @@
             <div id="sc-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if sc_plot_url %}
-                    <img src="data:image/png;base64,{{ sc_plot_url }}" alt="Small Cap Analysis" class="main-plot">
+                    <img id="sc-plot" src="data:image/png;base64,{{ sc_plot_url }}" alt="Small Cap Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ sc_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading Small Cap Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="sc-filter-start">Start Year</label><input type="number"
+                            id="sc-filter-start" min="1926" max="2026" value="1926" class="filter-input"></div>
+                    <div class="filter-group"><label for="sc-filter-end">End Year</label><input type="number"
+                            id="sc-filter-end" min="1926" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('sc')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('sc')">Reset</button>
+                    <span id="sc-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -751,10 +787,20 @@
             <div id="lsc-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if lsc_plot_url %}
-                    <img src="data:image/png;base64,{{ lsc_plot_url }}" alt="LSC Analysis" class="main-plot">
+                    <img id="lsc-plot" src="data:image/png;base64,{{ lsc_plot_url }}" alt="LSC Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ lsc_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading LSC Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="lsc-filter-start">Start Year</label><input type="number"
+                            id="lsc-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                    <div class="filter-group"><label for="lsc-filter-end">End Year</label><input type="number"
+                            id="lsc-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('lsc')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('lsc')">Reset</button>
+                    <span id="lsc-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -811,10 +857,20 @@
             <div id="lscda-graph-view" class="sub-tab-content active">
                 <div class="chart-container">
                     {% if lscda_plot_url %}
-                    <img src="data:image/png;base64,{{ lscda_plot_url }}" alt="LSCDA Analysis" class="main-plot">
+                    <img id="lscda-plot" src="data:image/png;base64,{{ lscda_plot_url }}" alt="LSCDA Analysis"
+                        class="main-plot" data-original-src="data:image/png;base64,{{ lscda_plot_url }}">
                     {% else %}
                     <p class="placeholder-text">Loading LSCDA Data...</p>
                     {% endif %}
+                </div>
+                <div class="date-filter-bar">
+                    <div class="filter-group"><label for="lscda-filter-start">Start Year</label><input type="number"
+                            id="lscda-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                    <div class="filter-group"><label for="lscda-filter-end">End Year</label><input type="number"
+                            id="lscda-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                    <button class="filter-run-btn" onclick="runFilter('lscda')">Run</button>
+                    <button class="filter-reset-btn" onclick="resetFilter('lscda')">Reset</button>
+                    <span id="lscda-filter-status" class="filter-status"></span>
                 </div>
             </div>
 
@@ -874,10 +930,20 @@
         <div id="ir-graph-view" class="sub-tab-content active">
             <div class="chart-container">
                 {% if ir_plot_url %}
-                <img src="data:image/png;base64,{{ ir_plot_url }}" alt="Interest Rate Analysis" class="main-plot">
+                <img id="ir-plot" src="data:image/png;base64,{{ ir_plot_url }}" alt="Interest Rate Analysis"
+                    class="main-plot" data-original-src="data:image/png;base64,{{ ir_plot_url }}">
                 {% else %}
                 <p class="placeholder-text">Loading Interest Rate Data...</p>
                 {% endif %}
+            </div>
+            <div class="date-filter-bar">
+                <div class="filter-group"><label for="ir-filter-start">Start Year</label><input type="number"
+                        id="ir-filter-start" min="1870" max="2026" value="1870" class="filter-input"></div>
+                <div class="filter-group"><label for="ir-filter-end">End Year</label><input type="number"
+                        id="ir-filter-end" min="1870" max="2026" value="2026" class="filter-input"></div>
+                <button class="filter-run-btn" onclick="runFilter('ir')">Run</button>
+                <button class="filter-reset-btn" onclick="resetFilter('ir')">Reset</button>
+                <span id="ir-filter-status" class="filter-status"></span>
             </div>
         </div>
 
@@ -923,10 +989,20 @@
         <div id="margin-graph-view" class="sub-tab-content active">
             <div class="chart-container">
                 {% if margin_plot_url %}
-                <img src="data:image/png;base64,{{ margin_plot_url }}" alt="Margin Strategy Analysis" class="main-plot">
+                <img id="margin-plot" src="data:image/png;base64,{{ margin_plot_url }}" alt="Margin Strategy Analysis"
+                    class="main-plot" data-original-src="data:image/png;base64,{{ margin_plot_url }}">
                 {% else %}
                 <p class="placeholder-text">Loading Margin Strategy Data...</p>
                 {% endif %}
+            </div>
+            <div class="date-filter-bar">
+                <div class="filter-group"><label for="margin-filter-start">Start Year</label><input type="number"
+                        id="margin-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                <div class="filter-group"><label for="margin-filter-end">End Year</label><input type="number"
+                        id="margin-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                <button class="filter-run-btn" onclick="runFilter('margin')">Run</button>
+                <button class="filter-reset-btn" onclick="resetFilter('margin')">Reset</button>
+                <span id="margin-filter-status" class="filter-status"></span>
             </div>
         </div>
 
@@ -1082,13 +1158,26 @@
             }
         }
 
-        // --- Leverage Date Range Filter ---
-        async function runLeverageFilter() {
-            const startYear = document.getElementById('lev-start').value;
-            const endYear = document.getElementById('lev-end').value;
-            const status = document.getElementById('lev-filter-status');
-            const img = document.getElementById('leverage-plot');
-            const runBtn = document.querySelector('.date-filter-bar .filter-run-btn');
+        // --- Generic Date Range Filter for all tabs ---
+        const FILTER_CONFIG = {
+            lev: { api: '/api/leverage/filter', imgId: 'leverage-plot', defaultStart: '1928', defaultEnd: '2026' },
+            inf: { api: '/api/inflation/filter', imgId: 'inf-plot', defaultStart: '1928', defaultEnd: '2026' },
+            div: { api: '/api/dividend/filter', imgId: 'div-plot', defaultStart: '1920', defaultEnd: '2026' },
+            lda: { api: '/api/lda/filter', imgId: 'lda-plot', defaultStart: '1928', defaultEnd: '2026' },
+            sc: { api: '/api/small_cap/filter', imgId: 'sc-plot', defaultStart: '1926', defaultEnd: '2026' },
+            lsc: { api: '/api/lsc/filter', imgId: 'lsc-plot', defaultStart: '1928', defaultEnd: '2026' },
+            lscda: { api: '/api/lscda/filter', imgId: 'lscda-plot', defaultStart: '1928', defaultEnd: '2026' },
+            ir: { api: '/api/interest_rate/filter', imgId: 'ir-plot', defaultStart: '1870', defaultEnd: '2026' },
+            margin: { api: '/api/margin/filter', imgId: 'margin-plot', defaultStart: '1928', defaultEnd: '2026' }
+        };
+
+        async function runFilter(prefix) {
+            const cfg = FILTER_CONFIG[prefix];
+            const startYear = document.getElementById(`${prefix}-filter-start`).value;
+            const endYear = document.getElementById(`${prefix}-filter-end`).value;
+            const status = document.getElementById(`${prefix}-filter-status`);
+            const img = document.getElementById(cfg.imgId);
+            const runBtn = status.parentElement.querySelector('.filter-run-btn');
 
             if (!startYear || !endYear) {
                 status.textContent = 'Enter both years';
@@ -1104,7 +1193,7 @@
             runBtn.disabled = true;
 
             try {
-                const response = await fetch(`/api/leverage/filter?start=${startDate}&end=${endDate}`);
+                const response = await fetch(`${cfg.api}?start=${startDate}&end=${endDate}`);
                 const data = await response.json();
 
                 if (data.error) {
@@ -1112,7 +1201,7 @@
                     status.className = 'filter-status error';
                 } else {
                     img.src = 'data:image/png;base64,' + data.plot;
-                    status.textContent = `${startYear}–${endYear}`;
+                    status.textContent = `${startYear}\u2013${endYear}`;
                     status.className = 'filter-status';
                 }
             } catch (error) {
@@ -1124,13 +1213,14 @@
             }
         }
 
-        function resetLeverageFilter() {
-            const img = document.getElementById('leverage-plot');
-            const status = document.getElementById('lev-filter-status');
+        function resetFilter(prefix) {
+            const cfg = FILTER_CONFIG[prefix];
+            const img = document.getElementById(cfg.imgId);
+            const status = document.getElementById(`${prefix}-filter-status`);
             img.src = img.getAttribute('data-original-src');
             status.textContent = '';
-            document.getElementById('lev-start').value = '1928';
-            document.getElementById('lev-end').value = '2026';
+            document.getElementById(`${prefix}-filter-start`).value = cfg.defaultStart;
+            document.getElementById(`${prefix}-filter-end`).value = cfg.defaultEnd;
         }
 
     </script>

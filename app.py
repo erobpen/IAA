@@ -139,5 +139,53 @@ def get_leverage_filtered():
     except Exception as e:
         return jsonify({'plot': None, 'error': str(e)})
 
+
+def _filter_endpoint(analyze_fn):
+    """Generic handler for date-range filter endpoints."""
+    try:
+        start = request.args.get('start', '')
+        end = request.args.get('end', '')
+        img = analyze_fn(start, end)
+        if img is not None:
+            return jsonify({'plot': base64.b64encode(img.getvalue()).decode(), 'error': None})
+        else:
+            return jsonify({'plot': None, 'error': 'No data for the selected range'})
+    except Exception as e:
+        return jsonify({'plot': None, 'error': str(e)})
+
+
+@app.route('/api/inflation/filter')
+def get_inflation_filtered():
+    return _filter_endpoint(inflation.analyze_inflation_filtered)
+
+@app.route('/api/dividend/filter')
+def get_dividend_filtered():
+    return _filter_endpoint(dividend_module.analyze_dividend_filtered)
+
+@app.route('/api/lda/filter')
+def get_lda_filtered():
+    return _filter_endpoint(lda.analyze_lda_filtered)
+
+@app.route('/api/small_cap/filter')
+def get_small_cap_filtered():
+    return _filter_endpoint(small_cap.analyze_small_cap_filtered)
+
+@app.route('/api/lsc/filter')
+def get_lsc_filtered():
+    return _filter_endpoint(lsc.analyze_lsc_filtered)
+
+@app.route('/api/lscda/filter')
+def get_lscda_filtered():
+    return _filter_endpoint(lscda.analyze_lscda_filtered)
+
+@app.route('/api/interest_rate/filter')
+def get_interest_rate_filtered():
+    return _filter_endpoint(interest_rate.analyze_interest_rate_filtered)
+
+@app.route('/api/margin/filter')
+def get_margin_filtered():
+    return _filter_endpoint(margin.analyze_margin_filtered)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

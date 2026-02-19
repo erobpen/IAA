@@ -139,3 +139,70 @@ def analyze_lda():
         print(f"Error in analyze_lda: {e}")
         traceback.print_exc()
         return None, []
+
+
+def analyze_lda_filtered(start_date, end_date):
+    """Re-run LDA analysis for a custom date range, re-compounding from $10k."""
+    try:
+        daily_data = analyzer.get_strategy_data()
+        if daily_data.empty:
+            return None
+
+        div_data = dividend_module.get_dividend_data()
+        if div_data.empty:
+            return None
+
+        # Same merge logic as analyze_lda
+        daily_data['YearMonth'] = daily_data.index.to_period('M')
+        div_data['YearMonth'] = div_data.index.to_period('M')
+
+        df_daily = daily_data.reset_index()
+        if 'Date' not in df_daily.columns:
+            df_daily.rename(columns={df_daily.columns[0]: 'Date'}, inplace=True)
+
+        df_div = div_data.reset_index()[['YearMonth', 'Dividend Yield']]
+        merged = pd.merge(df_daily, df_div, on='YearMonth', how='left')
+        merged.set_index('Date', inplace=True)
+
+        merged['Dividend Yield'] = merged['Dividend Yield'].fillna(0)
+        merged['Div_Daily_Yield'] = merged['Dividend Yield'] / 100 / 252
+
+        ETF_EXPENSE_RATIO_DAILY = 0.01 / 252
+
+        merged['BH_Div_Daily'] = merged['Simple_Ref'] + merged['Div_Daily_Yield']
+        merged['Lev_3x_Div_Daily'] = (
+            3 * merged['Simple_Ref'] + merged['Div_Daily_Yield']
+            - merged['Financing_Rate_Daily'] - ETF_EXPENSE_RATIO_DAILY
+        ).clip(lower=-1.0)
+        merged['Lev_Cash_Div_Daily'] = np.where(merged['Regime'] == 1, merged['Lev_3x_Div_Daily'], 0.0)
+
+        # Slice to date range
+        mask = (merged.index >= pd.Timestamp(start_date)) & (merged.index <= pd.Timestamp(end_date))
+        window = merged.loc[mask]
+        if window.empty or len(window) < 2:
+            return None
+
+        initial_capital = 10000.0
+        total_sp = initial_capital * (1 + window['BH_Div_Daily']).cumprod()
+        total_3x = initial_capital * (1 + window['Lev_Cash_Div_Daily']).cumprod()
+
+        # Resample to annual for plotting
+        annual_sp = total_sp.resample('YE').last()
+        annual_3x = total_3x.resample('YE').last()
+        years = annual_sp.index.year
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.semilogy(years, annual_sp.values, label='Total Return S&P 500 (Div Reinvested)', color='#10b981', linewidth=2)
+        ax.semilogy(years, annual_3x.values, label='Total Return 3x Strategy (Div Reinvested)', color='#8b5cf6', linewidth=2)
+
+        ax.set_title(f'LDA Total Return: {years[0]}–{years[-1]} ($10k Initial)')
+        ax.set_ylabel('Portfolio Value ($)')
+        ax.set_xlabel('Year')
+        ax.grid(True, which="both", ls="-", alpha=0.2)
+        ax.legend()
+
+        return save_plot_to_buffer(fig)
+    except Exception as e:
+        print(f"Error in analyze_lda_filtered: {e}")
+        traceback.print_exc()
+        return None

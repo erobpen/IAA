@@ -239,3 +239,37 @@ def analyze_margin():
 
 if __name__ == "__main__":
     analyze_margin()
+
+
+def analyze_margin_filtered(start_date, end_date):
+    """Re-run margin simulation for a custom date range."""
+    try:
+        df = get_merged_data()
+        if df.empty:
+            return None
+
+        # Slice to date range BEFORE running simulation
+        mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
+        window = df.loc[mask].copy()
+        if window.empty or len(window) < 2:
+            return None
+
+        window = calculate_margin_strategy(window)
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.plot(window.index, window['Margin_Equity'], label='3x Strategy Margin Equity ($0 Start)', color='purple', linewidth=1)
+        ax.set_yscale('symlog')
+
+        start_yr = window.index[0].strftime('%Y')
+        end_yr = window.index[-1].strftime('%Y')
+        ax.set_title(f'Margin Strategy: {start_yr}–{end_yr}')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Net Liquidation Value ($)')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
+        return save_plot_to_buffer(fig)
+    except Exception as e:
+        print(f"Error in analyze_margin_filtered: {e}")
+        traceback.print_exc()
+        return None

@@ -192,3 +192,49 @@ def calculate_period_cagr(start_year, end_year):
     except Exception as e:
         print(f"Error in calculate_period_cagr: {e}")
         return None
+
+
+def analyze_inflation_filtered(start_date, end_date):
+    """Re-plot inflation analysis for a custom date range."""
+    try:
+        data = database.get_all_inflation_data()
+        if data.empty:
+            return None
+
+        # Slice to range
+        mask = (data.index >= pd.Timestamp(start_date)) & (data.index <= pd.Timestamp(end_date))
+        window = data.loc[mask]
+        if window.empty or len(window) < 2:
+            return None
+
+        annual = window.resample('YE').last()
+        annual['Inflation_Pct'] = annual['CPI'].pct_change() * 100
+        base_cpi = annual['CPI'].iloc[0]
+        annual['Cumulative_Factor'] = annual['CPI'] / base_cpi
+
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+        color = 'tab:red'
+        ax1.set_xlabel('Year')
+        ax1.set_ylabel('Cumulative Inflation (Factor)', color=color)
+        line1 = ax1.plot(annual.index, annual['Cumulative_Factor'], label='Cumulative Inflation', linewidth=2, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.grid(True, which="both", ls="-", alpha=0.2)
+
+        ax2 = ax1.twinx()
+        color = 'tab:blue'
+        ax2.set_ylabel('Annual Inflation (%)', color=color)
+        line2 = ax2.plot(annual.index, annual['Inflation_Pct'], label='Annual Inflation', linewidth=1, linestyle='--', color=color, alpha=0.6)
+        ax2.tick_params(axis='y', labelcolor=color)
+
+        lines = line1 + line2
+        labels = [l.get_label() for l in lines]
+        ax1.legend(lines, labels, loc='upper left')
+
+        start_yr = annual.index[0].strftime('%Y')
+        end_yr = annual.index[-1].strftime('%Y')
+        plt.title(f'Inflation Analysis: {start_yr}–{end_yr}')
+
+        return save_plot_to_buffer(fig)
+    except Exception as e:
+        print(f"Error in analyze_inflation_filtered: {e}")
+        return None
