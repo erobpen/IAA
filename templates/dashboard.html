@@ -209,6 +209,64 @@
         .text-success {
             color: #22c55e;
         }
+
+        /* --- Tooltip (Breadcrumb) --- */
+        .tooltip-wrap {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dashed #64748b;
+        }
+
+        .tooltip-wrap .tooltip-box {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 380px;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.7;
+            color: #cbd5e1;
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            text-align: left;
+            white-space: normal;
+        }
+
+        .tooltip-wrap:hover .tooltip-box {
+            display: block;
+        }
+
+        .tooltip-box .tt-title {
+            color: #f8fafc;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-box code {
+            background: #0f172a;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #60a5fa;
+        }
+
+        .tooltip-box .tt-term {
+            color: #94a3b8;
+            margin: 4px 0;
+            padding-left: 10px;
+        }
+
+        .tooltip-box .tt-term b {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -267,7 +325,19 @@
                                     SMA 200 ($10k)</th>
                                 <th
                                     style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
-                                    3x Buy & Hold ($10k)</th>
+                                    <span class="tooltip-wrap">3x Buy & Hold ($10k)
+                                        <span class="tooltip-box">
+                                            <div class="tt-title">Daily Return Formula</div>
+                                            <code>3×price − 2×financing − expense</code>
+                                            <div class="tt-term"><b>3 × price_return</b> — 3x daily S&P 500 change</div>
+                                            <div class="tt-term"><b>2 × (FedFunds/100/252)</b> — financing cost on the
+                                                2x borrowed portion (swap rate)</div>
+                                            <div class="tt-term"><b>0.01 / 252</b> — ETF expense ratio (1% annual)</div>
+                                            <div style="margin-top: 8px;">
+                                                <code>Growth = $10k × cumprod(1 + daily)</code></div>
+                                        </span>
+                                    </span>
+                                </th>
                                 <th
                                     style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);">
                                     3x Strategy ($10k)</th>
