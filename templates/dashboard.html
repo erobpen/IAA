@@ -401,6 +401,8 @@
                 title="Historical interest rates and estimated broker margin rates">Interest Rate</button>
             <button class="tab-btn" onclick="openTab(event, 'margin-tab')"
                 title="Margin-funded leveraged strategy simulation with interest costs">Margin</button>
+            <button class="tab-btn" onclick="openTab(event, 'bond-tab')"
+                title="Leverage Bond Strategy: 3x strategy with 10Y Treasury rotation during risk-off periods">Bond</button>
         </div>
 
         <!-- LEVERAGE TAB CONTENT (Main Section) -->
@@ -1051,6 +1053,71 @@
         </div>
     </div>
 
+    <!-- BOND TAB CONTENT -->
+    <div id="bond-tab" class="tab-content">
+        <!-- LEVEL 2 TABS (Sub Tabs) -->
+        <div class="sub-tabs-nav">
+            <button class="sub-tab-btn active" onclick="openSubTab(event, 'bond-graph-view')">Graph</button>
+            <button class="sub-tab-btn" onclick="openSubTab(event, 'bond-data-view')">Data</button>
+        </div>
+
+        <!-- GRAPH VIEW -->
+        <div id="bond-graph-view" class="sub-tab-content active">
+            <div class="chart-container">
+                {% if bond_plot_url %}
+                <img id="bond-plot" src="data:image/png;base64,{{ bond_plot_url }}" alt="Bond Strategy Analysis"
+                    class="main-plot" data-original-src="data:image/png;base64,{{ bond_plot_url }}">
+                {% else %}
+                <p class="placeholder-text">Loading Bond Strategy Data...</p>
+                {% endif %}
+            </div>
+            <div class="date-filter-bar">
+                <div class="filter-group"><label for="bond-filter-start">Start Year</label><input type="number"
+                        id="bond-filter-start" min="1928" max="2026" value="1928" class="filter-input"></div>
+                <div class="filter-group"><label for="bond-filter-end">End Year</label><input type="number"
+                        id="bond-filter-end" min="1928" max="2026" value="2026" class="filter-input"></div>
+                <button class="filter-run-btn" onclick="runFilter('bond')">Run</button>
+                <button class="filter-reset-btn" onclick="resetFilter('bond')">Reset</button>
+                <span id="bond-filter-status" class="filter-status"></span>
+            </div>
+        </div>
+
+        <!-- DATA VIEW -->
+        <div id="bond-data-view" class="sub-tab-content">
+            <div style="max-height: 70vh; overflow-y: auto; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead
+                        style="position: sticky; top: 0; background-color: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">
+                                Year</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="bond_strat">3x Strategy (Bond)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color);"
+                                data-tooltip="bond_strat_div">3x Strategy (Bond + Div)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                data-tooltip="bond_yield">Bond Yield (Est)</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); color: #64748b;"
+                                data-tooltip="div_yield">Div Yield</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in bond_table %}
+                        <tr>
+                            <td style="padding: 10px;">{{ row.year }}</td>
+                            <td style="padding: 10px; text-align: right; color: #3b82f6;">{{ row.total_strat }}</td>
+                            <td style="padding: 10px; text-align: right; color: #eab308; font-weight: bold;">{{
+                                row.total_strat_div }}</td>
+                            <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.bond_yield }}</td>
+                            <td style="padding: 10px; text-align: right; color: #64748b;">{{ row.div_yield }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     </div>
     </div>
 
@@ -1168,7 +1235,8 @@
             lsc: { api: '/api/lsc/filter', imgId: 'lsc-plot', defaultStart: '1928', defaultEnd: '2026' },
             lscda: { api: '/api/lscda/filter', imgId: 'lscda-plot', defaultStart: '1928', defaultEnd: '2026' },
             ir: { api: '/api/interest_rate/filter', imgId: 'ir-plot', defaultStart: '1870', defaultEnd: '2026' },
-            margin: { api: '/api/margin/filter', imgId: 'margin-plot', defaultStart: '1928', defaultEnd: '2026' }
+            margin: { api: '/api/margin/filter', imgId: 'margin-plot', defaultStart: '1928', defaultEnd: '2026' },
+            bond: { api: '/api/bond/filter', imgId: 'bond-plot', defaultStart: '1928', defaultEnd: '2026' }
         };
 
         async function runFilter(prefix) {

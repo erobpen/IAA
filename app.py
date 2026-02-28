@@ -12,6 +12,7 @@ import interest_rate
 import margin
 import database
 import data_cache
+import bond
 
 app = Flask(__name__)
 
@@ -67,6 +68,10 @@ def dashboard():
     margin_img, margin_table = margin.analyze_margin()
     margin_plot_url = _encode_image(margin_img)
 
+    # Bond Analysis
+    bond_img, bond_table = bond.analyze_bond()
+    bond_plot_url = _encode_image(bond_img)
+
     return render_template('dashboard.html', 
                            plot_url=plot_url, 
                            table_data=table_data,
@@ -89,7 +94,9 @@ def dashboard():
                            lda_table=lda_table,
                            sc_plot_url=sc_plot_url,
                            sc_table=sc_table,
-                           sc_cagr=sc_cagr)
+                           sc_cagr=sc_cagr,
+                           bond_plot_url=bond_plot_url,
+                           bond_table=bond_table)
 
 @app.route('/api/inflation_cagr')
 def get_inflation_cagr():
@@ -185,6 +192,10 @@ def get_interest_rate_filtered():
 @app.route('/api/margin/filter')
 def get_margin_filtered():
     return _filter_endpoint(margin.analyze_margin_filtered)
+
+@app.route('/api/bond/filter')
+def get_bond_filtered():
+    return _filter_endpoint(bond.analyze_bond_filtered)
 
 
 if __name__ == '__main__':
